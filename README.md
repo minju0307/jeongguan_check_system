@@ -29,7 +29,7 @@ https://drive.google.com/drive/folders/1M1c2d7KxggVau5BCpywNSQ9FTt3eeeJb?usp=sha
     ```
     
 
-- [main.py](http://main.py) 코드를 실행합니다.
+- [main.py] 코드를 실행합니다.
     
     ```python
     python main.py --input_file_path input_samples/jeongguan_1.txt \
