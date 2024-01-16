@@ -2,6 +2,7 @@ import re
 import json
 import argparse
 import openai
+import os
 
 from mrc import generate_answer
 import inference_checklist as inference_checklist
@@ -92,11 +93,11 @@ def get_mrc_answer(gpt_ver, input_text, question):
     # 정관 검토 질문에 대한 기계 독해 문제 풀이
     return generate_answer(gpt_ver, input_text, question)
 
-
-def get_advice(gpt_ver, question, mrc_answer, top_k=3):
+def get_reference(top_k, question):
     # 질문과 관련된 상법 조항 검색
-    references = retrieval_reference(top_k, question)
+    return retrieval_reference(top_k, question)
 
+def get_advice(gpt_ver, question, mrc_answer, references):
     # 변호사 조언 생성
     prompt = prompt_generator(question, mrc_answer, references)
     advice = generate_advice(gpt_ver, prompt)
@@ -104,88 +105,72 @@ def get_advice(gpt_ver, question, mrc_answer, top_k=3):
     return advice
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+def main(input_id, input_text, top_k_jeongguan=3, top_k_sangbub=3, gpt_ver="gpt-4-1106-preview", openai_key_file_path="resources/openai_key.json"):
+    
+    outputs = {}  
+    assign_api_key(openai_key_file_path)
 
-    parser.add_argument("--input_file_path", type=str, help="input text file path", default="input_samples/jeongguan_1.txt")
-    parser.add_argument("--top_k_jeongguan", type=int, help="Top k references checklist question-paragraph retrieval", default="3")
-    parser.add_argument("--top_k_sangbub", type=int, help="Top k references checklist question-law retrieval", default="3")
-    parser.add_argument("--gpt_ver", type=str, help="openai gpt version", default="gpt-4-1106-preview")
-    parser.add_argument("--openai_key_file_path", type=str, default="resources/openai_key.json", help="OpenAI key file path")
-    args = parser.parse_args()
-
-    assign_api_key(args.openai_key_file_path)
-
-    # with open(args.input_file_path, "r", encoding="utf-8") as f:
-    with open("../all/1.txt", "r", encoding="utf-8") as f:
-        input_text = f.read()
-
+    outputs["doc_id"] = input_id
+    outputs["doc_text"] = input_text
+    
     # 체크리스트 -> 문단 서치 
     # 정관 문단 나누기 
     input_texts = split_document_shorter(input_text)
+    outputs["doc_paragraphs"] = input_texts
     
     # 체크리스트 DB 불러오기
     with open("data/jeongguan_questions_56.json", "r", encoding="utf-8-sig") as f:
         questions = json.load(f)
     questions = list(questions.keys())
+    outputs["checklist_questions"] = questions
+    
+    outputs["mapping_paragraphs"] = []
+    outputs["mrc_answer"] = []
+    outputs["sangbub"] = []
+    outputs["advice"] = []
+    
     
     # 정관 기계 독해 문제 풀이 
-    for q in questions:
+    for q in questions[:1]: # test 용으로 2개만
         print("**체크리스트 질문**")
         print(q)
         print()
         # 체크리스트 질문 - 정관 맵핑 
-        paragraphs = get_paragraph(q, input_texts, args.top_k_jeongguan)
+        paragraphs = get_paragraph(q, input_texts, top_k_jeongguan)
         print("**체크리스트 질문의 답을 할 수 있는 top-k 개의 문단 서치**")
         print('\n'.join(paragraphs))
         print()
+        outputs["mapping_paragraphs"].append('\n'.join(paragraphs))
 
         # mrc
-        answer = get_mrc_answer(args.gpt_ver, '\n'.join(paragraphs), q)
+        answer = get_mrc_answer(gpt_ver, '\n'.join(paragraphs), q)
         print("**체크리스트 질문과 답변 mrc 결과**")
         print(q)
         print(answer)
         print()
         print()
+        outputs["mrc_answer"].append(answer)
         
         # 변호사 조언 생성
         print("**변호사 조언 생성 결과**")
-        advice = get_advice(args.gpt_ver, q, answer, args.top_k_sangbub)
+        sangbub = get_reference(top_k_sangbub, q)
+        advice = get_advice(gpt_ver, q, answer, sangbub)
         print(advice)
         print()
         print()
-        
+        outputs["sangbub"].append(sangbub)
+        outputs["advice"].append(advice)
     
-    '''
-    # 문단 -> 체크리스트 서치
-    # 정관 문단 나누기 
-    input_texts = split_document(input_text)
+    if not os.path.exists("./db"):
+        os.makedirs("./db")
+        
+    with open(f"db/{input_id}.json", "w", encoding="utf-8") as fw:
+        json.dump(outputs, fw, indent=4, ensure_ascii=False)
     
-    for text in input_texts[:1]:
-        print("**정관 문단**")
-        print(text)
-        print()
-        # 체크리스트 서치하기
-        checklist = get_checklist(text)
-        print("**정관 문단과 관련된 checklist**")
-        print(checklist)
-        print()
+    return outputs
         
-        # 정관 기계 독해 문제 풀이
-        for c in checklist[:1]:
-            question = c
-            answer = get_mrc_answer(text, question)
-            print("**체크리스트 질문과 답변 mrc 결과**")
-            print(question)
-            print(answer)
-            print()
+if __name__ == "__main__":
+    with open("../all/1.txt") as f:
+        input_text = f.read()
         
-            advice = get_advice(question, answer, args.top_k)
-            print("**변호사 조언 생성 결과**")
-            print(advice)
-            print() 
-        
-    
-    print()
-    print()
-    '''
+    main(input_id=1, input_text=input_text)

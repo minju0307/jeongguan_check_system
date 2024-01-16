@@ -9,6 +9,8 @@ import faiss
 
 from encoder import BiEncoder
 import os
+import json
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def load_training_state(model, optimizer, scheduler, model_path, optim_path) -> None:
@@ -23,14 +25,9 @@ def retrieval_query(tokenizer, model, query, index, top_k, device):
     """하나의 질문과 관련 있는 상법 조항을 검색합니다"""
     model.to(device)
     
-    question_45 = pd.read_csv('./data/question_45.csv')
-    sangbub= question_45['johang'].tolist()
-    reference = []
-    for bub in sangbub:
-        if bub in reference:
-            continue
-        reference.append(bub)
-    
+    with open("data/reference_sangbub.json", "r", encoding="utf-8-sig") as f:
+        reference = json.load(f)
+
     dict = tokenizer.batch_encode_plus([query], return_tensors='pt')
     q_ids = dict['input_ids'].to(device)
     q_atten = dict['attention_mask'].to(device)
