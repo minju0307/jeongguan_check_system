@@ -2,14 +2,14 @@
 
 ## 1. Architecture 구성
 
-![Untitled](images\architecture.png)
+![Untitled](images/architecture.png)
 
 - 1단계 정관 문서 기계 독해, 2단계 변호사 조언 생성 단계로 구성된 파이프라인
 - 각 단계를 Retrieval-augmented Generation (RAG)으로 구성하고, 각 모듈을 두 번 반복하여 LLM의 hallucination을 감소
 
 ## 2-1. 시스템 Flow Chart
 
-![Untitled](images\flow_chart.png)
+![Untitled](images/flow_chart.png)
 
 - (1) 사용자가 정관 문서를 업로드한다.
 - (2) 시스템은 정관 문서를 문단으로 split한다.
@@ -20,7 +20,7 @@
 
 ## 2-2. 실행 예시
 
-![Untitled](images\example2_2.png)
+![Untitled](images/example2_2.png)
 
 ## 3. 주요 기능 코드 동작
 
