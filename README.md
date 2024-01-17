@@ -103,7 +103,7 @@
     
     - 실행 예시
         
-        ![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/22ba537c-38ef-460d-b193-ccc86308fd98/ad5bd423-770b-4d06-a29f-e99dd69e2352/Untitled.png)
+        ![Untitled](images/Untitled.png)
         
     
     - 해당 방법의 장점
@@ -111,7 +111,7 @@
         
     - 문제가 되는 상황
         
-        ![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/22ba537c-38ef-460d-b193-ccc86308fd98/3879c96d-cebe-4df0-8957-c73cab76f464/Untitled.png)
+        ![Untitled](images/Untitled.png)
         
         - 첫 번째 문단에서는 ‘임시 주주총회를 개최하는가?’에 대한 답을 얻을 수 없으므로 정관 수정이 필요하다고 조언. 그러나 4번째 문단에서 임시 주주총회 개최에 대한 내용이 포함되어 있기 때문에 해당 조언은 틀린 조언임.
         - 하나의 질문에 대하여 문단별로 여러번 호출해서 답변하므로 각 문단별 질문에 대한 답변의 일관성이 보장되지 않음. 따라서후처리하여 통합할 수 있게 하는 것이 필요함.
