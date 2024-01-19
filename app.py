@@ -89,8 +89,7 @@ def get_paragraph(): ## parameter : doc_id, paragraph_id
         
         ## optional parameter 확인
         if paragraph_id < 0 or paragraph_id >= len(outputs["doc_paragraphs"]) :
-            return jsonify({'error': f'Invalid Paragraph ID: \'paragraph_id\' must be a value between 0 and {len(outputs["doc_paragraphs"])-1}'}), 401
-        
+            return jsonify({'error': f'Invalid Paragraph ID: \'paragraph_id\' must be a value between 0 and {len(outputs["doc_paragraphs"])-1}'}), 400
         return jsonify(outputs["doc_paragraphs"][paragraph_id])
     
     else:  
@@ -118,7 +117,7 @@ def get_checklist(): ## parameter : checklist_id
         checklist_id = int(parameter_dict["checklist_id"])
         ## optional parameter 확인
         if checklist_id < 0 or checklist_id >= 56 :
-            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 401
+            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 400
         return jsonify(list(questions.keys())[checklist_id])
     else:
         return jsonify(list(questions.keys()))
@@ -146,7 +145,7 @@ def get_sangbub(): ## parameter : sangbub_id
         sangbub_id = int(parameter_dict["sangbub_id"])
         ## optional parameter 확인
         if sangbub_id < 0 or sangbub_id>= 31 :
-            return jsonify({'error': f'Invalid sangbub_id : \'sangbub_id \' must be a value between 0 and 30'}), 401
+            return jsonify({'error': f'Invalid sangbub_id : \'sangbub_id \' must be a value between 0 and 30'}), 400
         return jsonify(reference[sangbub_id])
     else:
         return jsonify(reference)
@@ -183,7 +182,7 @@ def get_mapping_paragraph(): ## paramter : doc_id, checklist_id
         checklist_id = int(parameter_dict["checklist_id"])
         ## optional parameter 확인
         if checklist_id < 0 or checklist_id >= 56 :
-            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 401
+            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 400
         
         results = []
         idx = int(parameter_dict["checklist_id"])
@@ -237,7 +236,7 @@ def get_mrc_answer(): ## paramter : doc_id, checklist_id
         checklist_id = int(parameter_dict["checklist_id"])
         ## optional parameter 확인
         if checklist_id < 0 or checklist_id >= 56 :
-            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 401
+            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 400
         results = []
         idx = int(parameter_dict["checklist_id"])
         result={}
@@ -289,7 +288,7 @@ def get_checklist_sangbub(): ## paramter : doc_id, checklist_id
         checklist_id = int(parameter_dict["checklist_id"])
         ## optional parameter 확인
         if checklist_id < 0 or checklist_id >= 56 :
-            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 401
+            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 400
         results = []
         idx = int(parameter_dict["checklist_id"])
         result={}
@@ -342,7 +341,7 @@ def get_checklist_advice(): ## paramter : doc_id, checklist_id
         checklist_id = int(parameter_dict["checklist_id"])
         ## optional parameter 확인
         if checklist_id < 0 or checklist_id >= 56 :
-            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 401
+            return jsonify({'error': f'Invalid checklist_id : \'checklist_id \' must be a value between 0 and 55'}), 400
         results = []
         idx = int(parameter_dict["checklist_id"])
         result={}
