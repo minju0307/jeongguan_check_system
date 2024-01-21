@@ -118,7 +118,7 @@ https://drive.google.com/drive/folders/1M1c2d7KxggVau5BCpywNSQ9FTt3eeeJb?usp=sha
 - [main.py] 코드를 실행합니다.
     
     ```python
-    python main.py --input_file_path input_samples/jeongguan_1.txt \
+    python main.py --input_file_path input_samples/1.txt \
     --gpt_ver gpt-4-1106-preview --openai_key_file_path resources/openai_key.json \
     --top_k_jeongguan 3 --top_k_sangbub 3
     ```

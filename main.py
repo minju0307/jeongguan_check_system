@@ -3,6 +3,7 @@ import json
 import argparse
 import openai
 import os
+import fire
 
 from mrc import generate_answer
 import inference_checklist as inference_checklist
@@ -170,7 +171,4 @@ def main(input_id, input_text, top_k_jeongguan=3, top_k_sangbub=3, gpt_ver="gpt-
     return outputs
         
 if __name__ == "__main__":
-    with open("../all/1.txt") as f:
-        input_text = f.read()
-        
-    main(input_id=1, input_text=input_text)
+    fire.Fire(main)
