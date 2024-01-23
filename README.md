@@ -64,7 +64,7 @@
 
 ### 4) 질문 - 상법 조항 맵핑
 
-- 체크리스트 질문과 가장 관련있는 상법 조항 학습된 로컬의 DPR model inference를 통해 을 매칭합니다.
+- 체크리스트 질문과 가장 관련있는 상법 조항 학습된 로컬의 DPR model inference를 통해 질문-상법 조항을 매칭합니다.
 - `get_advice` 호출 후 `retrieval_reference` 호출
     - input
         - **top_k** : 관련 있는 상법 조항을 몇 개까지 찾아서 맵핑할 것인지 (int)
@@ -118,7 +118,7 @@ https://drive.google.com/drive/folders/1M1c2d7KxggVau5BCpywNSQ9FTt3eeeJb?usp=sha
 - [main.py] 코드를 실행합니다.
     
     ```python
-    python main.py --input_file_path input_samples/1.txt \
+    python main.py --input_id 0001 --input_file_path input_samples/1.txt \
     --gpt_ver gpt-4-1106-preview --openai_key_file_path resources/openai_key.json \
     --top_k_jeongguan 3 --top_k_sangbub 3
     ```
