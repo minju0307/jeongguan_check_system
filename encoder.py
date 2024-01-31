@@ -13,6 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger()
 
+
 class BiEncoder(torch.nn.Module):
     def __init__(self):
         super(BiEncoder, self).__init__()
@@ -40,7 +41,7 @@ class BiEncoder(torch.nn.Module):
             ).pooler_output
 
     def checkpoint(self, model_ckpt_path):
-        '''state dict를 저장한다.'''
+        """state dict를 저장한다."""
         torch.save(deepcopy(self.state_dict()), model_ckpt_path)
         logger.debug(f"model self.state_dict saved to {model_ckpt_path}")
 

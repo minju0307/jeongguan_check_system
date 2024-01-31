@@ -2,11 +2,11 @@ import openai
 
 
 def generate_gpt(gpt_ver, query):
-    """ Generate a GPT response. """
+    """Generate a GPT response."""
     messages = [{"role": "user", "content": query}]
     response = openai.ChatCompletion.create(model=gpt_ver, messages=messages)
     res = response["choices"][0]["message"]["content"]
-    
+
     return res
 
 
@@ -20,7 +20,7 @@ def generate_answer(gpt_ver, jeongguan, question):
     try:
         query = template.format(paragraph=jeongguan, question=question)
         result = generate_gpt(gpt_ver, query)
-        
+
         return result
 
     except:
