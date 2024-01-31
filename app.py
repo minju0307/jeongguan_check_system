@@ -75,7 +75,7 @@ def get_paragraph():  ## parameter : doc_id, paragraph_id
     ## 없는 정관 아이디를 입력한 경우
     try:
         ## db 파일 불러오기
-        with open(f"db/{doc_id }.json", "r", encoding="utf-8") as f:
+        with open(f"db/{doc_id}.json", "r", encoding="utf-8") as f:
             outputs = json.load(f)
     except:
         return (
@@ -97,7 +97,7 @@ def get_paragraph():  ## parameter : doc_id, paragraph_id
             return (
                 jsonify(
                     {
-                        "error": f'Invalid Paragraph ID: \'paragraph_id\' must be a value between 0 and {len(outputs["doc_paragraphs"])-1}'
+                        "error": f'Invalid Paragraph ID: \'paragraph_id\' must be a value between 0 and {len(outputs["doc_paragraphs"]) - 1}'
                     }
                 ),
                 401,
@@ -201,7 +201,7 @@ def get_mapping_paragraph():  ## paramter : doc_id, checklist_id
     ## 없는 정관 아이디를 입력한 경우
     try:
         ## db 파일 불러오기
-        with open(f"db/{doc_id }.json", "r", encoding="utf-8") as f:
+        with open(f"db/{doc_id}.json", "r", encoding="utf-8") as f:
             outputs = json.load(f)
     except:
         return (
@@ -270,7 +270,7 @@ def get_mrc_answer():  ## paramter : doc_id, checklist_id
     ## 없는 정관 아이디를 입력한 경우
     try:
         ## db 파일 불러오기
-        with open(f"db/{doc_id }.json", "r", encoding="utf-8") as f:
+        with open(f"db/{doc_id}.json", "r", encoding="utf-8") as f:
             outputs = json.load(f)
     except:
         return (
@@ -339,7 +339,7 @@ def get_checklist_sangbub():  ## paramter : doc_id, checklist_id
     ## 없는 정관 아이디를 입력한 경우
     try:
         ## db 파일 불러오기
-        with open(f"db/{doc_id }.json", "r", encoding="utf-8") as f:
+        with open(f"db/{doc_id}.json", "r", encoding="utf-8") as f:
             outputs = json.load(f)
     except:
         return (
@@ -408,7 +408,7 @@ def get_checklist_advice():  ## paramter : doc_id, checklist_id
     ## 없는 정관 아이디를 입력한 경우
     try:
         ## db 파일 불러오기
-        with open(f"db/{doc_id }.json", "r", encoding="utf-8") as f:
+        with open(f"db/{doc_id}.json", "r", encoding="utf-8") as f:
             outputs = json.load(f)
     except:
         return (
