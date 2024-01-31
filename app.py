@@ -1,18 +1,20 @@
 import string
 from datetime import datetime
 from logging.config import dictConfig
-from random import random
+import random
 from urllib.parse import urljoin
 
-from flask import Flask, request, jsonify, json
+from flask import Flask, request, jsonify, json, render_template
 from jsonschema import validate
 from werkzeug.utils import secure_filename
 
 from error_code import ErrorCode, ErrorElement
-from main import main
+from inference_paragraph import semantic_search
+from main import main, split_document_shorter
 import os
+from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL
 
-from utils.utils import allowed_file, json_response_element
+from utils.utils import allowed_file, json_response_element, json_response, read_file
 
 dictConfig({
     'version': 1,
@@ -46,6 +48,7 @@ dictConfig({
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+app.config['UPLOAD_FOLDER'] = os.path.join(APP_ROOT, UPLOAD_FOLDER)
 app.config["JSON_AS_ASCII"] = False  # 한국어 지원을 위한 설정
 app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 app.json.sort_keys = True
@@ -89,8 +92,8 @@ def save_file_from_request(request, field='file', folder='temp'):
 
             file_dir = os.path.join(app.config['UPLOAD_FOLDER'], folder, date_str)
             new_file = f'{file_name}_{rand_str}{file_ext}'
-            file_url = urljoin(config.SERVICE_URL,
-                               os.path.join(config.UPLOAD_FOLDER, folder, date_str, new_file))  # 다운로드 가능한 URL
+            file_url = urljoin(SERVICE_URL,
+                               os.path.join(UPLOAD_FOLDER, folder, date_str, new_file))  # 다운로드 가능한 URL
 
             os.makedirs(file_dir, exist_ok=True)
             file_path = os.path.join(file_dir, new_file)
@@ -108,30 +111,50 @@ def save_file_from_request(request, field='file', folder='temp'):
 
 @app.route("/")
 def index():
-    return "Hello, World!"
+    return render_template('index.html')
 
 
 @app.route("/processing", methods=["POST"])
 def processing():
-    ## 보안 키 header로 전달되었는지 확인
-    auth_token = request.headers.get("Authorization")
-    if not auth_token:
-        return jsonify({"error": "Missing authorization token"}), 401
-    if not auth_token == "kimandhong":
-        return jsonify({"error": "Invalid Authentication"}), 401
-
-    ## json 형식이 맞는지 확인
-    # try:
-    #     contents = request.get_json(force=True)
-    # except:
-    #     return jsonify({"error": "Invalid Json Type"}), 400
-    results = save_file_from_request(request, folder='speech')
+    results = save_file_from_request(request, folder='jeongguan')
     if type(results) == ErrorElement:
         return json_response_element(results)
     else:
-        file_path, file_url = results
+        file_path, file_url = results['file']
 
-    print(file_path)
+    input_text = '\n'.join(read_file(file_path))
+
+    outputs = dict()
+
+    outputs["doc_id"] = "0000"
+    outputs["doc_text"] = input_text
+
+    # 체크리스트 -> 문단 서치
+    # 정관 문단 나누기
+    input_texts = split_document_shorter(input_text)
+    outputs["doc_paragraphs"] = input_texts
+    outputs["mapping_paragraphs"] = []
+
+    # 체크리스트 DB 불러오기
+    with open("data/jeongguan_questions_56.json", "r", encoding="utf-8-sig") as f:
+        questions = json.load(f)
+    questions = list(questions.keys())
+    outputs["checklist_questions"] = questions
+
+    top_k_jeongguan = 3
+    # 정관 기계 독해 문제 풀이
+    for q in questions[:1]:  # test 용으로 2개만
+        print("**체크리스트 질문**")
+        print(q)
+        print()
+        # 체크리스트 질문 - 정관 맵핑
+        paragraph_idxs = semantic_search(q, input_texts, top_k_jeongguan)
+        print("**체크리스트 질문의 답을 할 수 있는 top-k 개의 문단 서치**")
+        print(paragraph_idxs)
+        print()
+        outputs["mapping_paragraphs"].append(paragraph_idxs)
+
+    return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 
 
 # 정관 문서를 받아서 분석을 수행하고, 결과를 json 형태로 반환
@@ -585,10 +608,11 @@ def get_checklist_advice():  ## paramter : doc_id, checklist_id
 
 if __name__ == "__main__":
     try:
-        import config
-
-        port = config.SERVER_PORT
+        port = SERVER_PORT
     except ImportError:
         port = 5000
+
+    upload_folder = os.path.join(APP_ROOT, UPLOAD_FOLDER)
+    os.makedirs(upload_folder, exist_ok=True)
 
     app.run(host="0.0.0.0", port=port, debug=True)

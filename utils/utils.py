@@ -89,3 +89,12 @@ def save_to_json(data, filename='data.json'):
 
     with open(f'{filename}', 'w', encoding='utf-8') as fw:
         json.dump(data, fw, indent=4, ensure_ascii=False)
+
+
+def read_file(file):
+    lines = []
+    with open(file, 'r', encoding='utf-8') as f:
+        for line in f:
+            lines.append(line.strip())
+
+    return lines

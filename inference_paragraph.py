@@ -32,6 +32,9 @@ def semantic_search(question, input_texts, top_k):
 
     similarities = cosine_similarity(target_embedding, sentence_embeddings)
     top_k_indices = np.argsort(similarities[0])[-top_k:][::-1]
-    paragraphs = [input_texts[k] for k in top_k_indices]
 
-    return paragraphs
+    # numpy array to list
+    top_k_indices = top_k_indices.tolist()
+
+    return top_k_indices
+

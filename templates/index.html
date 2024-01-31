@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}
+Dysarthria XAI - Demo
+{% endblock %}
+
+{% block extra_head_after %}
+<script type="text/javascript">
+    let chart_colors = new Array();
+    chart_colors.push('rgba(255, 159, 64, 0.5)');
+    chart_colors.push('rgba(255, 205, 86, 0.5)');
+    chart_colors.push('rgba(75, 192, 192, 0.5)');
+    chart_colors.push('rgba(54, 162, 235, 0.5)');
+    chart_colors.push('rgba(153, 102, 255, 0.5)');
+
+    let subsystem_ko_dict = {
+        'respiration': '호흡',
+        'vocalization': '발성',
+        'resonance': '공명',
+        'articulation': '조음',
+        'prosody': '운율'
+    }
+
+    let measure_ko_dict = {
+        'pitch': '소리 높낮이',
+        'pitch_var': '일정한 소리 높낮이',
+        'intensity': '소리 크기',
+        'intensity_var': '일정한 소리 크기',
+        'jitter': '목소리 떨림',
+        'shimmer': '음량 변동',
+        'hnr': '목소리의 깨끗함',
+        'speech': '말 속도',
+        'articulation': '발음 속도',
+        'pause_freq': '쉼 횟수',
+        'pause_rate': '쉼 길이',
+        'char_acc': '발음 정확도',
+        'pcc': '자음 정확도',
+        'pvc': '모음 정확도',
+        'ddk_rate': '음절 발음 횟수',
+        'ddk_average': '음절 발음 시간',
+        'ddk_std': '일정한 음절 발음 시간',
+        'ddk_pause_rate': '음절 쉼 횟수',
+        'ddk_pause_average': '음절 쉼 시간',
+        'ddk_pause_std': '일정한 음절 쉼 시간',
+    }
+
+    let severity_ko_dict = {
+        0: '정상(normal)',
+        1: '경도 ~ 중도(mild to moderate)',
+        2: '고도(severe)'
+    }
+
+    let subsystem_keys = ['respiration', 'vocalization', 'articulation', 'prosody'];
+
+    let subsystem_structure = new Array();
+    subsystem_structure.push(["pitch", "pitch_var", "intensity", "intensity_var", "jitter", "shimmer", "hnr"]);
+    subsystem_structure.push(["pause_freq", "pause_rate", "ddk_pause_rate", "ddk_pause_average", "ddk_pause_std"]);
+    subsystem_structure.push(["char_acc"]);
+    subsystem_structure.push(["speech", "articulation", "pause", "ddk_rate", "ddk_average", "ddk_std"]);
+
+    $(document).ready(function () {
+        console.log('ready');
+
+        function form_xai_post(response) {
+            let code = response.code;
+            if (code !== 200) {
+                alert('Error: ' + response.msg);
+                return
+            }
+            let data = response.data;
+            console.log(data);
+
+        }
+
+        let form_xai = $('#form_xai');
+        form_xai.submit(function (e) {
+            e.preventDefault();
+            // Add file data to form
+            // var formData = new FormData();
+            // formData.append('file', $('input[type=file]')[0].files[0]);
+
+            // get submit button value
+            var submitValue = $(this).find('button[type=submit]:focus').val();
+
+            // get all form data
+            var formData = new FormData(this);
+            formData.append('mode', submitValue);
+
+            $.ajax({
+                url: this.action,
+                type: 'POST',
+                data: formData,
+                processData: false, // jQuery가 데이터를 처리하지 않도록 설정
+                contentType: false, // 기본 컨텐트 타입을 사용하지 않도록 설정
+                success: function (response) {
+                    form_xai_post(response);
+                }
+            });
+        });
+
+
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div>
+    <h1 class="mt-3 fs-2">XAI 통합 테스트</h1>
+    <div class="row mt-3">
+
+        <div class="col px-5">
+            <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapse_form" role="button"
+               aria-expanded="false" aria-controls="collapse_form">
+                파일로 추론하기
+            </a>
+            <div class="collapse mt-3" id="collapse_form">
+                <h3>정관 업로드</h3>
+                <form id="form_xai" class="mt-3" enctype="multipart/form-data"
+                      action="{{ url_for('processing') }}">
+                    <div class="mb-3 row">
+                        <label for="formFile" class="col-sm-3 col-form-label">파일(txt)</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="file" id="formFile" name="file">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                    <button class="btn btn-light" type="submit" name="mode" value="test">Test Submit</button>
+                </form>
+            </div>
+            <h3 class="mt-3">분석 결과</h3>
+            <h4 class="mt-3">사용자 정보</h4>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}

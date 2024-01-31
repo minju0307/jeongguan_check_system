@@ -90,7 +90,9 @@ def get_checklist(input_text):
 
 def get_paragraph(question, input_texts, top_k):
     # 체크리스트 질문과 관련된 문단을 검색 (@top_k)
-    paragraphs = semantic_search(question, input_texts, top_k)
+    paragraph_idxs = semantic_search(question, input_texts, top_k)
+
+    paragraphs = [input_texts[k] for k in paragraph_idxs]
 
     return paragraphs
 
@@ -114,12 +116,12 @@ def get_advice(gpt_ver, question, mrc_answer, references):
 
 
 def main(
-    input_id,
-    input_text,
-    top_k_jeongguan=3,
-    top_k_sangbub=3,
-    gpt_ver="gpt-4-1106-preview",
-    openai_key_file_path="resources/openai_key.json",
+        input_id,
+        input_text,
+        top_k_jeongguan=3,
+        top_k_sangbub=3,
+        gpt_ver="gpt-4-1106-preview",
+        openai_key_file_path="resources/openai_key.json",
 ):
     outputs = {}
     assign_api_key(openai_key_file_path)
