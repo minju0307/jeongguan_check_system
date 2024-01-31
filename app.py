@@ -43,12 +43,15 @@ def input_jeongguan():
             400,
         )
 
+    content_id = contents["id"]
+    content_text = contents["text"]
+    
     ## 이미 있는 아이디의 정관을 입력한 경우
     files = [i[:-5] for i in os.listdir("db")]
-    if contents["id"] in files:
+    if content_id != "0000" and content_id in files:  # 0000은 테스트용
         return jsonify({"error": "Existing Article"}), 400
 
-    outputs = main(input_id=contents["id"], input_text=contents["text"])
+    outputs = main(input_id=content_id, input_text=content_text)
 
     return jsonify(outputs)
 
@@ -292,7 +295,7 @@ def get_mrc_answer():  ## paramter : doc_id, checklist_id
             idx = int(parameter_dict["checklist_id"])
             result = {}
             result["question"] = outputs["checklist_questions"][idx]
-            result["paragraph"] = outputs["mapping_paragraphs"][idx]
+            result["answer"] = outputs["mrc_answer"][idx]
             results.append(result)
         except:
             return (
@@ -455,4 +458,10 @@ def get_checklist_advice():  ## paramter : doc_id, checklist_id
 
 
 if __name__ == "__main__":
-    app.run(host="163.239.28.21", port=5000, debug=True)
+    try:
+        import config
+        port = config.SERVER_PORT
+    except ImportError:
+        port = 5000
+        
+    app.run(host="0.0.0.0", port=port, debug=True)
