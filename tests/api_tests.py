@@ -4,12 +4,12 @@ import unittest
 
 import requests
 
-from config import SERVER_PORT
+from config import SERVER_PORT, SERVER_HOST
 
 
 class TestAPI(unittest.TestCase):
     def setUp(self):
-        self.url = f"http://localhost:{SERVER_PORT}"
+        self.url = f"http://{SERVER_HOST}:{SERVER_PORT}"
         self.auth_token = "kimandhong"
 
     def test_paragraph_split(self):
@@ -22,8 +22,6 @@ class TestAPI(unittest.TestCase):
 
         response = requests.post(url, headers={"Authorization": self.auth_token}, json=data)
 
-        # get http error message
-    
         # 200 OK
         if response.status_code != 200:
             print(response.text)
@@ -31,7 +29,98 @@ class TestAPI(unittest.TestCase):
 
         res = response.json()
         pprint(res)
-        pass
+
+    def test_get_paragraph(self):
+        doc_id = "0000"
+
+        url = self.url + "/paragraph?doc_id=" + doc_id
+
+        response = requests.get(url, headers={"Authorization": self.auth_token})
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(response.status_code, 200)
+
+        res = response.json()
+        pprint(res)
+
+    def test_get_checklist(self):
+        checklist_id = "1"
+
+        url = self.url + "/checklist?checklist_id=" + checklist_id
+
+        response = requests.get(url, headers={"Authorization": self.auth_token})
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(response.status_code, 200)
+
+        res = response.json()
+        pprint(res)
+
+    def test_get_sangbub(self):
+        sangbub_id = "30"
+
+        url = self.url + "/reference_sangbub?sangbub_id=" + sangbub_id
+
+        response = requests.get(url, headers={"Authorization": self.auth_token})
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(response.status_code, 200)
+
+        res = response.json()
+        pprint(res)
+
+    def test_get_mapping_paragraph(self):
+        doc_id = "0000"
+
+        url = self.url + "/qna/question_paragraph?doc_id=" + doc_id
+
+        response = requests.get(url, headers={"Authorization": self.auth_token})
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(response.status_code, 200)
+
+        res = response.json()
+        pprint(res)
+
+    def test_get_mrc_answer(self):
+        doc_id = "0000"
+        checklist_id = "0"
+
+        url = self.url + "/qna/mrc_answer?doc_id=" + doc_id + "&checklist_id=" + checklist_id
+
+        response = requests.get(url, headers={"Authorization": self.auth_token})
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(response.status_code, 200)
+
+        res = response.json()
+        pprint(res)
+
+    def test_get_checklist_sangbub(self):
+        doc_id = "0000"
+        checklist_id = "0"
+
+        url = self.url + "/advice/question_sangbub?doc_id=" + doc_id + "&checklist_id=" + checklist_id
+
+        response = requests.get(url, headers={"Authorization": self.auth_token})
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(response.status_code, 200)
+
+        res = response.json()
+        pprint(res)
 
 
 if __name__ == "__main__":
