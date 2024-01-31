@@ -1,11 +1,44 @@
+from logging.config import dictConfig
 from flask import Flask, request, jsonify, json
-import pandas as pd
 from jsonschema import validate
 from main import main
 import os
 
+dictConfig({
+    'version': 1,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s',
+        }
+    },
+    'handlers': {
+        'wsgi': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://flask.logging.wsgi_errors_stream',
+            'formatter': 'default'
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'web_server.log',
+            'formatter': 'default'
+        }
+    },
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi', 'file']
+    },
+    'loggers': {
+        'waitress': {
+            'level': 'INFO'
+        }
+    }
+})
+
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
 app.config["JSON_AS_ASCII"] = False  # 한국어 지원을 위한 설정
+app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
+app.json.sort_keys = True
 
 
 # 정관 문서를 받아서 분석을 수행하고, 결과를 json 형태로 반환
@@ -45,7 +78,7 @@ def input_jeongguan():
 
     content_id = contents["id"]
     content_text = contents["text"]
-    
+
     ## 이미 있는 아이디의 정관을 입력한 경우
     files = [i[:-5] for i in os.listdir("db")]
     if content_id != "0000" and content_id in files:  # 0000은 테스트용
@@ -460,8 +493,9 @@ def get_checklist_advice():  ## paramter : doc_id, checklist_id
 if __name__ == "__main__":
     try:
         import config
+
         port = config.SERVER_PORT
     except ImportError:
         port = 5000
-        
+
     app.run(host="0.0.0.0", port=port, debug=True)
