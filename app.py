@@ -1,8 +1,18 @@
+import string
+from datetime import datetime
 from logging.config import dictConfig
+from random import random
+from urllib.parse import urljoin
+
 from flask import Flask, request, jsonify, json
 from jsonschema import validate
+from werkzeug.utils import secure_filename
+
+from error_code import ErrorCode, ErrorElement
 from main import main
 import os
+
+from utils.utils import allowed_file, json_response_element
 
 dictConfig({
     'version': 1,
@@ -39,6 +49,89 @@ app.config['SECRET_KEY'] = 'secret!'
 app.config["JSON_AS_ASCII"] = False  # 한국어 지원을 위한 설정
 app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 app.json.sort_keys = True
+
+ALLOWED_EXTENSIONS = {'txt'}
+
+
+def save_file_from_request(request, field='file', folder='temp'):
+    # check if the post request has the file part
+    if type(field) == str:
+        field = [field]
+    elif type(field) == list:
+        pass
+    else:
+        raise ValueError('field must be str or list')
+
+    for f in field:
+        if f not in request.files:
+            return ErrorCode.NO_FILE_PART
+
+    files = [request.files[f] for f in field]
+
+    output_dict = dict()
+
+    for f, file in zip(field, files):
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            return ErrorCode.NO_SELECTED_FILE
+
+        if file and allowed_file(file.filename, ALLOWED_EXTENSIONS):
+            filename = secure_filename(file.filename)
+            file_name, file_ext = os.path.splitext(filename)
+
+            #
+            # 파일을 웹에서 접근 가능한 경로에 저장(ASR Worker에서 받아가는 경로)
+            #
+            date_str = datetime.now().strftime("%Y%m%d")
+            letters = string.ascii_lowercase
+            rand_str = ''.join(random.choice(letters) for i in range(5))
+
+            file_dir = os.path.join(app.config['UPLOAD_FOLDER'], folder, date_str)
+            new_file = f'{file_name}_{rand_str}{file_ext}'
+            file_url = urljoin(config.SERVICE_URL,
+                               os.path.join(config.UPLOAD_FOLDER, folder, date_str, new_file))  # 다운로드 가능한 URL
+
+            os.makedirs(file_dir, exist_ok=True)
+            file_path = os.path.join(file_dir, new_file)
+            file.save(file_path)
+
+            output_dict[f] = (file_path, file_url)
+        else:
+            return ErrorCode.NOT_ALLOWED_FILE_EXTENSION
+
+    if len(output_dict) == 0:
+        return ErrorCode.NO_SELECTED_FILE
+    else:
+        return output_dict
+
+
+@app.route("/")
+def index():
+    return "Hello, World!"
+
+
+@app.route("/processing", methods=["POST"])
+def processing():
+    ## 보안 키 header로 전달되었는지 확인
+    auth_token = request.headers.get("Authorization")
+    if not auth_token:
+        return jsonify({"error": "Missing authorization token"}), 401
+    if not auth_token == "kimandhong":
+        return jsonify({"error": "Invalid Authentication"}), 401
+
+    ## json 형식이 맞는지 확인
+    # try:
+    #     contents = request.get_json(force=True)
+    # except:
+    #     return jsonify({"error": "Invalid Json Type"}), 400
+    results = save_file_from_request(request, folder='speech')
+    if type(results) == ErrorElement:
+        return json_response_element(results)
+    else:
+        file_path, file_url = results
+
+    print(file_path)
 
 
 # 정관 문서를 받아서 분석을 수행하고, 결과를 json 형태로 반환
