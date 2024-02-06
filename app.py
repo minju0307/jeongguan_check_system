@@ -1,4 +1,5 @@
 import string
+import time
 from datetime import datetime
 from logging.config import dictConfig
 import random
@@ -9,7 +10,7 @@ from jsonschema import validate
 from werkzeug.utils import secure_filename
 
 from error_code import ErrorCode, ErrorElement
-from inference_paragraph import semantic_search
+from inference_paragraph import SemanticSearch
 from main import main, split_document_shorter
 import os
 from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL
@@ -54,6 +55,8 @@ app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 app.json.sort_keys = True
 
 ALLOWED_EXTENSIONS = {'txt'}
+
+semantic_search_model = SemanticSearch()
 
 
 def save_file_from_request(request, field='file', folder='temp'):
@@ -116,18 +119,26 @@ def index():
 
 @app.route("/processing", methods=["POST"])
 def processing():
-    results = save_file_from_request(request, folder='jeongguan')
-    if type(results) == ErrorElement:
-        return json_response_element(results)
-    else:
-        file_path, file_url = results['file']
+    # get flask post data
+    mode = request.form.get('mode')
 
-    input_text = '\n'.join(read_file(file_path))
+    if mode == 'test':
+        input_text = '\n'.join(read_file('input_samples/1.txt'))
+    else:
+        results = save_file_from_request(request, folder='jeongguan')
+        if type(results) == ErrorElement:
+            return json_response_element(results)
+        else:
+            file_path, file_url = results['file']
+
+        input_text = '\n'.join(read_file(file_path))
 
     outputs = dict()
 
-    outputs["doc_id"] = "0000"
-    outputs["doc_text"] = input_text
+    # generate doc_id with date and random number
+    outputs["doc_id"] = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
+    # outputs["doc_id"] = "0000"
+    # outputs["doc_text"] = input_text
 
     # 체크리스트 -> 문단 서치
     # 정관 문단 나누기
@@ -141,18 +152,22 @@ def processing():
     questions = list(questions.keys())
     outputs["checklist_questions"] = questions
 
+    start_time = time.time()
+
     top_k_jeongguan = 3
     # 정관 기계 독해 문제 풀이
-    for q in questions[:1]:  # test 용으로 2개만
+    for q in questions[:5]:  # test 용으로 2개만
         print("**체크리스트 질문**")
         print(q)
         print()
         # 체크리스트 질문 - 정관 맵핑
-        paragraph_idxs = semantic_search(q, input_texts, top_k_jeongguan)
+        paragraph_idxs = semantic_search_model.semantic_search(q, input_texts, top_k_jeongguan)
         print("**체크리스트 질문의 답을 할 수 있는 top-k 개의 문단 서치**")
         print(paragraph_idxs)
         print()
         outputs["mapping_paragraphs"].append(paragraph_idxs)
+
+    print(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 

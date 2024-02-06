@@ -38,3 +38,36 @@ def semantic_search(question, input_texts, top_k):
 
     return top_k_indices
 
+
+class SemanticSearch:
+    def __init__(self):
+        model_path = "multilabel_model"
+
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            model_path, output_hidden_states=True
+        )
+
+    def get_embedding(self, sentences):
+        encoded_input = self.tokenizer(
+            sentences, padding=True, truncation=True, return_tensors="pt"
+        )
+        with torch.no_grad():
+            model_output = self.model(**encoded_input)
+        last_hidden_states = model_output.hidden_states[-1]
+        cls_embeddings = last_hidden_states[:, 0, :]
+        return cls_embeddings
+
+    def semantic_search(self, question, input_texts, top_k):
+        paragraphs = []
+
+        target_embedding = self.get_embedding([question])
+        sentence_embeddings = self.get_embedding(input_texts)
+
+        similarities = cosine_similarity(target_embedding, sentence_embeddings)
+        top_k_indices = np.argsort(similarities[0])[-top_k:][::-1]
+
+        # numpy array to list
+        top_k_indices = top_k_indices.tolist()
+
+        return top_k_indices
