@@ -76,18 +76,18 @@ def get_dict_items(dict_obj):
     return output
 
 
-def load_json(data_file):
-    with open(data_file, 'r', encoding='utf-8') as f:
+def load_json(data_file, encoding='utf-8'):
+    with open(data_file, 'r', encoding=encoding) as f:
         data = json.load(f)
 
     return data
 
 
-def save_to_json(data, filename='data.json'):
+def save_to_json(data, filename='data.json', encoding='utf-8'):
     if filename[-4:] != 'json':
         filename += '.json'
 
-    with open(f'{filename}', 'w', encoding='utf-8') as fw:
+    with open(f'{filename}', 'w', encoding=encoding) as fw:
         json.dump(data, fw, indent=4, ensure_ascii=False)
 
 

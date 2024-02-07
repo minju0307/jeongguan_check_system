@@ -19,7 +19,7 @@ import os
 from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY
 from mrc import generate_answer
 
-from utils.utils import allowed_file, json_response_element, json_response, read_file
+from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
 
 dictConfig({
     'version': 1,
@@ -157,9 +157,9 @@ def processing():
     outputs["mapping_paragraphs"] = []
 
     # 체크리스트 DB 불러오기
-    with open("data/jeongguan_questions_56.json", "r", encoding="utf-8-sig") as f:
-        questions = json.load(f)
-    questions = list(questions.keys())
+    questions_dict = load_json('data/jeongguan_questions_56.json')
+    questions = list(questions_dict.keys())
+
     outputs["checklist_questions"] = questions
 
     start_time = time.time()
@@ -170,7 +170,10 @@ def processing():
 
     paragraph_results = []
     print("**체크리스트 질문**")
-    for q in questions[:1]:  # test 용으로 2개만
+    for idx, q in enumerate(questions[:1]):  # test 용으로 2개만
+        # create empty dir for idx
+        os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
+
         print(f"질문: {q}")
         # 체크리스트 질문 - 정관 맵핑
         paragraph_idxs = semantic_search_model.semantic_search(q, input_texts, top_k_jeongguan)
@@ -189,6 +192,9 @@ def processing():
         answer_results.append(answer)
         print(f"  답변: {answer}")
 
+        # save answer to file
+        write_file(os.path.join('tmp', uid, str(idx), 'answer.txt'), [answer])
+
     print(f"Elapsed Time(Question-Answer): {time.time() - start_time:.2f} sec")
 
     start_time = time.time()
@@ -199,7 +205,9 @@ def processing():
         # print(f"  상법: {sangbub}")
         advice = get_advice(gpt_ver, q, answer, sangbub)
         print(f"  변호사 조언: {advice}")
-        print()
+
+        # save advice to file
+        write_file(os.path.join('tmp', uid, str(idx), 'advice.txt'), [advice])
 
     print(f"Elapsed Time(Answer-Advice): {time.time() - start_time:.2f} sec")
 
@@ -221,9 +229,10 @@ def callback_answer():
         return json_response(msg=ErrorCode.NOT_EXIST_UID.msg, code=ErrorCode.NOT_EXIST_UID.code)
 
     # create idx dir
-    os.makedirs(os.path.join('tmp', uid, idx), exist_ok=True)
+    dest_dir = os.path.join('tmp', uid, idx)
+    os.makedirs(dest_dir, exist_ok=True)
 
-    write_file(os.path.join('tmp', uid, idx, 'answer.txt'), [answer])
+    write_file(os.path.join(dest_dir, 'answer.txt'), [answer])
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
 
@@ -243,11 +252,49 @@ def callback_advice():
         return json_response(msg=ErrorCode.NOT_EXIST_UID.msg, code=ErrorCode.NOT_EXIST_UID.code)
 
     # create idx dir
-    os.makedirs(os.path.join('tmp', uid, idx), exist_ok=True)
+    dest_dir = os.path.join('tmp', uid, idx)
+    os.makedirs(dest_dir, exist_ok=True)
 
-    write_file(os.path.join('tmp', uid, idx, 'advice.txt'), [advice])
+    write_file(os.path.join(dest_dir, 'advice.txt'), [advice])
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
+
+
+@app.route("/get_result", methods=["GET"])
+def get_result():
+    uid = request.args.get('uid')
+
+    if not uid:
+        return json_response(msg=ErrorCode.INVALID_PARAMETER.msg, code=ErrorCode.INVALID_PARAMETER.code)
+
+    dest_dir = os.path.join('tmp', uid)
+
+    # get all subdirs
+    subdirs = [f for f in os.listdir(dest_dir) if os.path.isdir(os.path.join(dest_dir, f))]
+
+    print(subdirs)
+
+    results = dict()
+
+    questions_dict = load_json('data/jeongguan_questions_56.json', encoding='utf-8-sig')
+    questions = list(questions_dict.keys())
+
+    for idx, q in enumerate(questions):
+        # check if idx dir exists
+        idx = str(idx)
+
+        results[idx] = dict()
+        results[idx]['question'] = q
+
+        if str(idx) not in subdirs:
+            results[idx]['answer'] = '분석 중...'
+            results[idx]['advice'] = '분석 중...'
+        else:
+            results[idx]['answer'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'answer.txt')))
+            results[idx]['advice'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'advice.txt')))
+
+    return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=results)
+
 
 
 # 정관 문서를 받아서 분석을 수행하고, 결과를 json 형태로 반환

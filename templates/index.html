@@ -17,6 +17,9 @@ Dysarthria XAI - Demo
             let data = response.data;
             console.log(data);
 
+            let uid = data.uid;
+            $('#uid').val(uid);
+
         }
 
         let form_xai = $('#form_xai');
@@ -44,6 +47,48 @@ Dysarthria XAI - Demo
                 }
             });
         });
+
+        function form_result_post(response) {
+            let code = response.code;
+            if (code !== 200) {
+                alert('Error: ' + response.msg);
+                return
+            }
+            let data = response.data;
+            console.log(data);
+
+            let result = data;
+            let tbody = $('#table_result').find('tbody');
+            tbody.empty();
+
+            // get dictionary result length
+            let result_keys = Object.keys(result);
+            let result_len = result_keys.length;
+
+            for (let i = 0; i < result_len; i++) {
+                let row = result[result_keys[i]];
+                console.log(row)
+                let tr = $('<tr>');
+                tr.append($('<td>').text(i + 1));
+                tr.append($('<td>').text(row.question));
+                tr.append($('<td>').text(row.answer));
+                tr.append($('<td>').text(row.advice));
+                tbody.append(tr);
+            }
+        }
+
+        let form_result = $('#form_result');
+        form_result.submit(function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: this.action,
+                data: $(this).serialize(),
+                type: 'GET',
+                success: function (response) {
+                    form_result_post(response);
+                }
+            });
+        });
     });
 </script>
 {% endblock %}
@@ -52,13 +97,8 @@ Dysarthria XAI - Demo
 <div>
     <h1 class="mt-3 fs-2">XAI 통합 테스트</h1>
     <div class="row mt-3">
-
         <div class="col px-5">
-            <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapse_form" role="button"
-               aria-expanded="false" aria-controls="collapse_form">
-                파일로 추론하기
-            </a>
-            <div class="collapse mt-3" id="collapse_form">
+            <div class="mt-3" id="collapse_form">
                 <h3>정관 업로드</h3>
                 <form id="form_xai" class="mt-3" enctype="multipart/form-data"
                       action="{{ url_for('processing') }}">
@@ -74,10 +114,40 @@ Dysarthria XAI - Demo
                 </form>
             </div>
             <h3 class="mt-3">분석 결과</h3>
-            <h4 class="mt-3">사용자 정보</h4>
+            <div class="mt-3">
+                <div class="row">
+                    <div class="col">
+                        <form id="form_result" class="mt-3" action="{{ url_for('get_result') }}">
+                            <div class="mb-3 row">
+                                <label for="uid" class="col-sm-3 col-form-label">문서 번호</label>
+                                <div class="col-sm-9">
+                                    <input class="form-control" type="text" id="uid" name="uid"
+                                           value="202402072146042387" readonly>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" type="submit">결과보기</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <table id="table_result" class="table">
+                            <thead>
+                            <tr>
+                                <th scope="col">번호</th>
+                                <th scope="col">질문</th>
+                                <th scope="col">답변</th>
+                                <th scope="col">변호사 조언</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
 </div>
 {% endblock %}
