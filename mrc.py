@@ -1,5 +1,7 @@
 import openai
 
+from utils.utils import print_exception
+
 
 def generate_gpt(gpt_ver, query):
     """Generate a GPT response."""
@@ -23,5 +25,6 @@ def generate_answer(gpt_ver, jeongguan, question):
 
         return result
 
-    except:
+    except Exception as e:
+        print_exception(e)
         print(f"\nmrc_error\n\n")

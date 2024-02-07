@@ -5,15 +5,18 @@ from logging.config import dictConfig
 import random
 from urllib.parse import urljoin
 
+import openai
 from flask import Flask, request, jsonify, json, render_template
 from jsonschema import validate
 from werkzeug.utils import secure_filename
 
 from error_code import ErrorCode, ErrorElement
 from inference_paragraph import SemanticSearch
-from main import main, split_document_shorter
+from inference_reference import RetrievalSearch
+from main import main, split_document_shorter, get_advice
 import os
-from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL
+from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY
+from mrc import generate_answer
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file
 
@@ -57,6 +60,7 @@ app.json.sort_keys = True
 ALLOWED_EXTENSIONS = {'txt'}
 
 semantic_search_model = SemanticSearch()
+retrieval_search_model = RetrievalSearch()
 
 
 def save_file_from_request(request, field='file', folder='temp'):
@@ -154,20 +158,44 @@ def processing():
 
     start_time = time.time()
 
+    gpt_ver = "gpt-4-1106-preview"
     top_k_jeongguan = 3
-    # 정관 기계 독해 문제 풀이
-    for q in questions[:5]:  # test 용으로 2개만
-        print("**체크리스트 질문**")
-        print(q)
-        print()
+    top_k_sangbub = 3
+
+    paragraph_results = []
+    print("**체크리스트 질문**")
+    for q in questions[:1]:  # test 용으로 2개만
+        print(f"질문: {q}")
         # 체크리스트 질문 - 정관 맵핑
         paragraph_idxs = semantic_search_model.semantic_search(q, input_texts, top_k_jeongguan)
-        print("**체크리스트 질문의 답을 할 수 있는 top-k 개의 문단 서치**")
-        print(paragraph_idxs)
-        print()
+        print(f"  문단 검색 결과: {paragraph_idxs}")
         outputs["mapping_paragraphs"].append(paragraph_idxs)
+        paragraph_results.append(paragraph_idxs)
 
     print(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
+
+    start_time = time.time()
+    answer_results = []
+
+    for q, paragraph_idxs in zip(questions, paragraph_results):
+        paragraphs = [input_texts[i] for i in paragraph_idxs]
+        answer = generate_answer(gpt_ver, "\n".join(paragraphs), q)
+        answer_results.append(answer)
+        print(f"  답변: {answer}")
+
+    print(f"Elapsed Time(Question-Answer): {time.time() - start_time:.2f} sec")
+
+    start_time = time.time()
+
+    for q, answer in zip(questions, answer_results):
+        # 변호사 조언 생성
+        sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
+        # print(f"  상법: {sangbub}")
+        advice = get_advice(gpt_ver, q, answer, sangbub)
+        print(f"  변호사 조언: {advice}")
+        print()
+
+    print(f"Elapsed Time(Answer-Advice): {time.time() - start_time:.2f} sec")
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 
@@ -622,6 +650,9 @@ def get_checklist_advice():  ## paramter : doc_id, checklist_id
 
 
 if __name__ == "__main__":
+    openai_api_key = os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY)
+    openai.api_key = openai_api_key
+
     try:
         port = SERVER_PORT
     except ImportError:
