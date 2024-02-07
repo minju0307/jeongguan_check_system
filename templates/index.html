@@ -5,58 +5,6 @@ Dysarthria XAI - Demo
 
 {% block extra_head_after %}
 <script type="text/javascript">
-    let chart_colors = new Array();
-    chart_colors.push('rgba(255, 159, 64, 0.5)');
-    chart_colors.push('rgba(255, 205, 86, 0.5)');
-    chart_colors.push('rgba(75, 192, 192, 0.5)');
-    chart_colors.push('rgba(54, 162, 235, 0.5)');
-    chart_colors.push('rgba(153, 102, 255, 0.5)');
-
-    let subsystem_ko_dict = {
-        'respiration': '호흡',
-        'vocalization': '발성',
-        'resonance': '공명',
-        'articulation': '조음',
-        'prosody': '운율'
-    }
-
-    let measure_ko_dict = {
-        'pitch': '소리 높낮이',
-        'pitch_var': '일정한 소리 높낮이',
-        'intensity': '소리 크기',
-        'intensity_var': '일정한 소리 크기',
-        'jitter': '목소리 떨림',
-        'shimmer': '음량 변동',
-        'hnr': '목소리의 깨끗함',
-        'speech': '말 속도',
-        'articulation': '발음 속도',
-        'pause_freq': '쉼 횟수',
-        'pause_rate': '쉼 길이',
-        'char_acc': '발음 정확도',
-        'pcc': '자음 정확도',
-        'pvc': '모음 정확도',
-        'ddk_rate': '음절 발음 횟수',
-        'ddk_average': '음절 발음 시간',
-        'ddk_std': '일정한 음절 발음 시간',
-        'ddk_pause_rate': '음절 쉼 횟수',
-        'ddk_pause_average': '음절 쉼 시간',
-        'ddk_pause_std': '일정한 음절 쉼 시간',
-    }
-
-    let severity_ko_dict = {
-        0: '정상(normal)',
-        1: '경도 ~ 중도(mild to moderate)',
-        2: '고도(severe)'
-    }
-
-    let subsystem_keys = ['respiration', 'vocalization', 'articulation', 'prosody'];
-
-    let subsystem_structure = new Array();
-    subsystem_structure.push(["pitch", "pitch_var", "intensity", "intensity_var", "jitter", "shimmer", "hnr"]);
-    subsystem_structure.push(["pause_freq", "pause_rate", "ddk_pause_rate", "ddk_pause_average", "ddk_pause_std"]);
-    subsystem_structure.push(["char_acc"]);
-    subsystem_structure.push(["speech", "articulation", "pause", "ddk_rate", "ddk_average", "ddk_std"]);
-
     $(document).ready(function () {
         console.log('ready');
 
@@ -96,8 +44,6 @@ Dysarthria XAI - Demo
                 }
             });
         });
-
-
     });
 </script>
 {% endblock %}
