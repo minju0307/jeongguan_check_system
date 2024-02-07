@@ -1,6 +1,7 @@
 import string
 import time
 from datetime import datetime
+from distutils.file_util import write_file
 from logging.config import dictConfig
 import random
 from urllib.parse import urljoin
@@ -140,7 +141,12 @@ def processing():
     outputs = dict()
 
     # generate doc_id with date and random number
-    outputs["doc_id"] = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
+    uid = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
+    outputs["uid"] = uid
+
+    # create empty dir for uid
+    os.makedirs(os.path.join('tmp', uid), exist_ok=True)
+
     # outputs["doc_id"] = "0000"
     # outputs["doc_text"] = input_text
 
@@ -198,6 +204,50 @@ def processing():
     print(f"Elapsed Time(Answer-Advice): {time.time() - start_time:.2f} sec")
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
+
+
+@app.route("/callback_answer", methods=["POST"])
+def callback_answer():
+    # get flask post data
+    uid = request.form.get('uid')
+    idx = request.form.get('idx')
+    answer = request.form.get('answer')
+
+    if not uid or not idx or not answer:
+        return json_response(msg=ErrorCode.INVALID_PARAMETER.msg, code=ErrorCode.INVALID_PARAMETER.code)
+
+    # check uid in tmp folder
+    if not os.path.exists(os.path.join('tmp', uid)):
+        return json_response(msg=ErrorCode.NOT_EXIST_UID.msg, code=ErrorCode.NOT_EXIST_UID.code)
+
+    # create idx dir
+    os.makedirs(os.path.join('tmp', uid, idx), exist_ok=True)
+
+    write_file(os.path.join('tmp', uid, idx, 'answer.txt'), [answer])
+
+    return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
+
+
+@app.route("/callback_advice", methods=["POST"])
+def callback_advice():
+    # get flask post data
+    uid = request.form.get('uid')
+    idx = request.form.get('idx')
+    advice = request.form.get('advice')
+
+    if not uid or not idx or not advice:
+        return json_response(msg=ErrorCode.INVALID_PARAMETER.msg, code=ErrorCode.INVALID_PARAMETER.code)
+
+    # check uid in tmp folder
+    if not os.path.exists(os.path.join('tmp', uid)):
+        return json_response(msg=ErrorCode.NOT_EXIST_UID.msg, code=ErrorCode.NOT_EXIST_UID.code)
+
+    # create idx dir
+    os.makedirs(os.path.join('tmp', uid, idx), exist_ok=True)
+
+    write_file(os.path.join('tmp', uid, idx, 'advice.txt'), [advice])
+
+    return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
 
 
 # 정관 문서를 받아서 분석을 수행하고, 결과를 json 형태로 반환

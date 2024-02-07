@@ -10,14 +10,14 @@ class ErrorElement():
 class ErrorCode():
     UNKNOWN_ERROR = ErrorElement(100, 'Unknown error')
     NO_SERVER_RESPONSE = ErrorElement(101, 'No server response')
+    INVALID_PARAMETER = ErrorElement(102, 'Invalid parameter')
 
     ASR_SERVER_ERROR = ErrorElement(110, 'Speech recognizer error')
     SUMMARY_SERVER_ERROR = ErrorElement(120, 'Summary recognizer error')
     AUTUMN_SEVERITY_SERVER_ERROR = ErrorElement(130, 'Autumn severity recognizer error')
     DDK_SEVERITY_SERVER_ERROR = ErrorElement(140, 'DDK severity recognizer error')
 
-    NO_AGE_ERROR = ErrorElement(150, 'No age error')
-    NO_GENDER_ERROR = ErrorElement(151, 'No gender error')
+    NOT_EXIST_UID = ErrorElement(150, 'uid does not exist')
 
     SUCCESS = ErrorElement(200, 'Success')
     TIMEOUT = ErrorElement(300, 'Timeout')

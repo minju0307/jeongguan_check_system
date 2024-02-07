@@ -1,10 +1,15 @@
+import os
+from datetime import datetime
 import json
+import random
 from pprint import pprint
 import unittest
+from shutil import rmtree
 
 import requests
 
-from config import SERVER_PORT, SERVER_HOST
+from config import SERVER_PORT, SERVER_HOST, APP_ROOT
+from error_code import ErrorCode
 
 
 class TestAPI(unittest.TestCase):
@@ -121,6 +126,63 @@ class TestAPI(unittest.TestCase):
 
         res = response.json()
         pprint(res)
+
+    def test_callback(self):
+        url = self.url + "/callback_answer"
+        uid = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
+
+        #
+        # 1. uid not exist
+        #
+        data = {
+            "uid": uid,
+            "idx": 1,
+            "answer": "테스트 결과입니다."
+        }
+        response = requests.post(url, headers={"Authorization": self.auth_token}, data=data)
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(response.status_code, 200)
+
+        res = response.json()
+
+        self.assertEqual(res['code'], ErrorCode.NOT_EXIST_UID.code)
+
+        #
+        # 2. uid exist - callback_answer
+        #
+
+        # create directory for uid
+        dest_dir = os.path.join(APP_ROOT, 'tmp', uid)
+        os.makedirs(dest_dir, exist_ok=True)
+
+        response = requests.post(url, headers={"Authorization": self.auth_token}, data=data)
+        res = response.json()
+
+        self.assertEqual(res['code'], ErrorCode.SUCCESS.code)
+
+        #
+        # 3. uid exist - callback_advice
+        #
+        url = self.url + "/callback_advice"
+
+        data = {
+            "uid": uid,
+            "idx": 1,
+            "advice": "테스트 변호사 조언입니다."
+        }
+
+        response = requests.post(url, headers={"Authorization": self.auth_token}, data=data)
+        res = response.json()
+
+        self.assertEqual(res['code'], ErrorCode.SUCCESS.code)
+
+        pprint(res)
+
+        # remove directory for uid
+        rmtree(dest_dir)
 
 
 if __name__ == "__main__":
