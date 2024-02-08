@@ -7,6 +7,7 @@ import random
 from urllib.parse import urljoin
 
 import openai
+from celery import Celery, signature
 from flask import Flask, request, jsonify, json, render_template
 from jsonschema import validate
 from werkzeug.utils import secure_filename
@@ -16,7 +17,8 @@ from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
 from main import main, split_document_shorter, get_advice
 import os
-from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY
+from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
+    CELERY_TASK_NAME
 from mrc import generate_answer
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
@@ -62,6 +64,8 @@ ALLOWED_EXTENSIONS = {'txt'}
 
 semantic_search_model = SemanticSearch()
 retrieval_search_model = RetrievalSearch()
+
+task = Celery('tasks', broker=MQ_CELERY_BROKER_URL)
 
 
 def save_file_from_request(request, field='file', folder='temp'):
@@ -147,9 +151,6 @@ def processing():
     # create empty dir for uid
     os.makedirs(os.path.join('tmp', uid), exist_ok=True)
 
-    # outputs["doc_id"] = "0000"
-    # outputs["doc_text"] = input_text
-
     # 체크리스트 -> 문단 서치
     # 정관 문단 나누기
     input_texts = split_document_shorter(input_text)
@@ -185,29 +186,45 @@ def processing():
 
     start_time = time.time()
     answer_results = []
+    answer_task = f'{CELERY_TASK_NAME}.llm_answer'
+    advice_task = f'{CELERY_TASK_NAME}.llm_advice'
 
-    for q, paragraph_idxs in zip(questions, paragraph_results):
+    for idx, (q, paragraph_idxs) in enumerate(zip(questions, paragraph_results)):
         paragraphs = [input_texts[i] for i in paragraph_idxs]
-        answer = generate_answer(gpt_ver, "\n".join(paragraphs), q)
-        answer_results.append(answer)
-        print(f"  답변: {answer}")
-
+        print(paragraphs)
+        # answer = generate_answer(gpt_ver, "\n".join(paragraphs), q)
+        # answer_results.append(answer)
+        # print(f"  답변: {answer}")
         # save answer to file
-        write_file(os.path.join('tmp', uid, str(idx), 'answer.txt'), [answer])
+        # write_file(os.path.join('tmp', uid, str(idx), 'answer.txt'), [answer])
+
+        sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
+
+        # result = task.send_task(task_name, args=[uid, idx, paragraphs, q], queue=CELERY_TASK_NAME,
+        #                         expires=(60 * 60 * 24))
+
+        chain = (
+            signature(answer_task, args=[uid, idx, paragraphs, q], app=task, queue=CELERY_TASK_NAME) |
+            signature(advice_task, args=[uid, idx, q, sangbub], app=task, queue=CELERY_TASK_NAME)
+        )
+
+        result = chain()
+
+        print(f"  답변: {result.id}")
 
     print(f"Elapsed Time(Question-Answer): {time.time() - start_time:.2f} sec")
 
     start_time = time.time()
 
-    for q, answer in zip(questions, answer_results):
+    # for q, answer in zip(questions, answer_results):
         # 변호사 조언 생성
-        sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
+        # sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
         # print(f"  상법: {sangbub}")
-        advice = get_advice(gpt_ver, q, answer, sangbub)
-        print(f"  변호사 조언: {advice}")
-
-        # save advice to file
-        write_file(os.path.join('tmp', uid, str(idx), 'advice.txt'), [advice])
+        # advice = get_advice(gpt_ver, q, answer, sangbub)
+        # print(f"  변호사 조언: {advice}")
+        #
+        # # save advice to file
+        # write_file(os.path.join('tmp', uid, str(idx), 'advice.txt'), [advice])
 
     print(f"Elapsed Time(Answer-Advice): {time.time() - start_time:.2f} sec")
 
@@ -276,7 +293,7 @@ def get_result():
 
     results = dict()
 
-    questions_dict = load_json('data/jeongguan_questions_56.json', encoding='utf-8-sig')
+    questions_dict = load_json('data/jeongguan_questions_56.json')
     questions = list(questions_dict.keys())
 
     for idx, q in enumerate(questions):
@@ -290,11 +307,17 @@ def get_result():
             results[idx]['answer'] = '분석 중...'
             results[idx]['advice'] = '분석 중...'
         else:
-            results[idx]['answer'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'answer.txt')))
-            results[idx]['advice'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'advice.txt')))
+            try:
+                results[idx]['answer'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'answer.txt')))
+            except FileNotFoundError:
+                results[idx]['answer'] = '분석 중...'
+
+            try:
+                results[idx]['advice'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'advice.txt')))
+            except FileNotFoundError:
+                results[idx]['advice'] = '분석 중...'
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=results)
-
 
 
 # 정관 문서를 받아서 분석을 수행하고, 결과를 json 형태로 반환

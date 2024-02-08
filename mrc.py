@@ -27,4 +27,4 @@ def generate_answer(gpt_ver, jeongguan, question):
 
     except Exception as e:
         print_exception(e)
-        print(f"\nmrc_error\n\n")
+        return "Error: Failed to generate answer."
