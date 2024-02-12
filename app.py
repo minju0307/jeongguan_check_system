@@ -127,8 +127,8 @@ def index():
     return render_template('index.html')
 
 
-@app.route("/processing", methods=["POST"])
-def processing():
+@app.route("/analyze", methods=["POST"])
+def analyze():
     # get flask post data
     mode = request.form.get('mode')
     callback_url = request.form.get('callback_url')

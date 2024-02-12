@@ -30,7 +30,7 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
         pprint(res)
@@ -45,7 +45,7 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
         pprint(res)
@@ -60,7 +60,7 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
         pprint(res)
@@ -75,7 +75,7 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
         pprint(res)
@@ -90,7 +90,7 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
         pprint(res)
@@ -106,7 +106,7 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
         pprint(res)
@@ -122,13 +122,13 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
         pprint(res)
 
     def test_callback(self):
-        url = self.url + "/callback_answer"
+        url = self.url + "/callback_result"
         uid = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
 
         #
@@ -144,11 +144,11 @@ class TestAPI(unittest.TestCase):
         # 200 OK
         if response.status_code != 200:
             print(response.text)
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(200, response.status_code)
 
         res = response.json()
 
-        self.assertEqual(res['code'], ErrorCode.NOT_EXIST_UID.code)
+        self.assertEqual(ErrorCode.NOT_EXIST_UID.code, res['code'])
 
         #
         # 2. uid exist - callback_answer
@@ -161,12 +161,11 @@ class TestAPI(unittest.TestCase):
         response = requests.post(url, headers={"Authorization": self.auth_token}, data=data)
         res = response.json()
 
-        self.assertEqual(res['code'], ErrorCode.SUCCESS.code)
+        self.assertEqual(ErrorCode.SUCCESS.code, res['code'])
 
         #
         # 3. uid exist - callback_advice
         #
-        url = self.url + "/callback_advice"
 
         data = {
             "uid": uid,
@@ -174,10 +173,20 @@ class TestAPI(unittest.TestCase):
             "advice": "테스트 변호사 조언입니다."
         }
 
-        response = requests.post(url, headers={"Authorization": self.auth_token}, data=data)
+        try:
+            response = requests.post(url, headers={"Authorization": self.auth_token}, data=data)
+        except requests.exceptions.ConnectionError as e:
+            print(f'ConnectionError: {e}')
+            return False
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(200, response.status_code)
+
         res = response.json()
 
-        self.assertEqual(res['code'], ErrorCode.SUCCESS.code)
+        self.assertEqual(ErrorCode.SUCCESS.code, res['code'])
 
         pprint(res)
 

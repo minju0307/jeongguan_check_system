@@ -2,12 +2,10 @@ from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
 
-from urllib.parse import urljoin
-
 import requests
 from celery import Celery
 
-from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, SERVICE_URL, CELERY_TASK_NAME
+from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME
 from main import get_advice
 from mrc import generate_answer
 
