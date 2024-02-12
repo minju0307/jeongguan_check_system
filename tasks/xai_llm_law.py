@@ -29,7 +29,7 @@ def llm_answer(self, uid, idx, paragraphs, q):
     gpt_ver = "gpt-4-1106-preview"
     # print(f'({task_id}) x: {x}, y: {y}')
     answer = generate_answer(gpt_ver, "\n".join(paragraphs), q)
-    print(answer)
+    logger.debug(answer)
 
     # callback
     callback_url = urljoin(SERVICE_URL, 'callback_answer')
@@ -75,7 +75,7 @@ def llm_advice(self, answer, uid, idx, q, sangbub):
     gpt_ver = "gpt-4-1106-preview"
     # print(f'({task_id}) x: {x}, y: {y}')
     advice = get_advice(gpt_ver, q, answer, sangbub)
-    print(advice)
+    logger.debug(advice)
 
     # callback
     callback_url = urljoin(SERVICE_URL, 'callback_advice')
@@ -110,7 +110,7 @@ def llm_advice(self, answer, uid, idx, q, sangbub):
         logger.error(f'({task_id}) Error: {code} - {msg}')
         return False
 
-    return answer
+    return advice
 
 
 if __name__ == "__main__":

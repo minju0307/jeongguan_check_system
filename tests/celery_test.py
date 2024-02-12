@@ -35,5 +35,39 @@ class TestCelery(unittest.TestCase):
 
         self.assertNotEqual(output, False)
 
+    def test_generate_advice(self):
+        uid = 'test'
+        idx = 0
+
+        # create a directory for the uid
+        uid_path = os.path.join(APP_ROOT, 'tmp', uid)
+        rmtree(uid_path, ignore_errors=True)
+        os.makedirs(uid_path)
+
+        question = '정기주주총회를 개최하는가?'
+        answer = '예, 정기주주총회는 매 결산기가 끝난 후 3월 내에 소집됩니다.'
+        sangbub = """제365조(총회의 소집)
+①정기총회는 매년 1회 일정한 시기에 이를 소집하여야 한다.
+②연 2회 이상의 결산기를 정한 회사는 매기에 총회를 소집하여야 한다.
+③임시총회는 필요있는 경우에 수시 이를 소집한다.
+
+제542조의4(주주총회 소집공고 등)
+① 상장회사가 주주총회를 소집하는 경우 대통령령으로 정하는 수 이하의 주식을 소유하는 주주에게는 정관으로 정하는 바에 따라 주주총회일의 2주 전에 주주총회를 소집하는 뜻과 회의의 목적사항을 둘 이상의 일간신문에 각각 2회 이상 공고하거나 대통령령으로 정하는 바에 따라 전자적 방법으로 공고함으로써 제363조제1항의 소집통지를 갈음할 수 있다.
+② 상장회사가 이사ㆍ감사의 선임에 관한 사항을 목적으로 하는 주주총회를 소집통지 또는 공고하는 경우에는 이사ㆍ감사 후보자의 성명, 약력, 추천인, 그 밖에 대통령령으로 정하는 후보자에 관한 사항을 통지하거나 공고하여야 한다.
+③ 상장회사가 주주총회 소집의 통지 또는 공고를 하는 경우에는 사외이사 등의 활동내역과 보수에 관한 사항, 사업개요 등 대통령령으로 정하는 사항을 통지 또는 공고하여야 한다. 다만, 상장회사가 그 사항을 대통령령으로 정하는 방법으로 일반인이 열람할 수 있도록 하는 경우에는 그러하지 아니하다.
+
+제388조(이사의 보수)
+이사의 보수는 정관에 그 액을 정하지 아니한 때에는 주주총회의 결의로 이를 정한다.
+"""
+
+        task_name = f'{CELERY_TASK_NAME}.llm_advice'
+        result = self.app.send_task(task_name, args=[answer, uid, idx, question, sangbub], queue=CELERY_TASK_NAME,
+                                    expires=(60 * 60 * 24))
+
+        print(result.id)
+        output = result.get()
+
+        self.assertNotEqual(output, False)
+
     def tearDown(self):
         pass
