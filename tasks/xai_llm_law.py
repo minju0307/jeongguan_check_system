@@ -1,3 +1,7 @@
+from celery.utils.log import get_task_logger
+
+logger = get_task_logger(__name__)
+
 from urllib.parse import urljoin
 
 import requests
@@ -39,18 +43,24 @@ def llm_answer(self, uid, idx, paragraphs, q):
         "idx": idx,
         "answer": answer
     }
-    response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data)
+
+    try:
+        response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data)
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f'({task_id}) ConnectionError: {e}, {callback_url}')
+        return False
 
     # 200 OK
     if response.status_code != 200:
-        pass
+        logger.error(f'({task_id}) Error: {response.status_code} - {response.text}')
+        return False
 
     result = response.json()
     code = result.get('code')
     msg = result.get('msg')
 
     if code != 200:
-        print(f'({task_id}) Error: {code} - {msg}')
+        logger.error(f'({task_id}) Error: {code} - {msg}')
         return False
 
     return answer
@@ -80,18 +90,24 @@ def llm_advice(self, answer, uid, idx, q, sangbub):
         "idx": idx,
         "advice": advice
     }
-    response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data)
+
+    try:
+        response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data)
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f'({task_id}) ConnectionError: {e}, {callback_url}')
+        return False
 
     # 200 OK
     if response.status_code != 200:
-        pass
+        logger.error(f'({task_id}) Error: {response.status_code} - {response.text}')
+        return False
 
     result = response.json()
     code = result.get('code')
     msg = result.get('msg')
 
     if code != 200:
-        print(f'({task_id}) Error: {code} - {msg}')
+        logger.error(f'({task_id}) Error: {code} - {msg}')
         return False
 
     return answer

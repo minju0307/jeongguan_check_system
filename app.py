@@ -148,7 +148,7 @@ def processing():
     uid = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
     outputs["uid"] = uid
 
-    # create empty dir for uid
+    # create empty dir for uid (for callback test)
     os.makedirs(os.path.join('tmp', uid), exist_ok=True)
 
     # 체크리스트 -> 문단 서치
@@ -172,7 +172,7 @@ def processing():
     paragraph_results = []
     print("**체크리스트 질문**")
     for idx, q in enumerate(questions[:1]):  # test 용으로 2개만
-        # create empty dir for idx
+        # create empty dir for idx (for callback test)
         os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
 
         print(f"질문: {q}")
