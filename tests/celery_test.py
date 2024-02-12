@@ -4,12 +4,12 @@ from shutil import rmtree
 
 from celery import Celery
 
-from config import MQ_CELERY_BROKER_URL, CELERY_TASK_NAME, APP_ROOT
+from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, APP_ROOT
 
 
 class TestCelery(unittest.TestCase):
     def setUp(self):
-        self.app = Celery(CELERY_TASK_NAME, broker=MQ_CELERY_BROKER_URL)
+        self.app = Celery(CELERY_TASK_NAME, broker=MQ_CELERY_BROKER_URL, backend=MQ_CELERY_BACKEND_URL)
 
     def test_generate_answer(self):
         uid = 'test'
@@ -31,6 +31,9 @@ class TestCelery(unittest.TestCase):
         result = self.app.send_task(task_name, args=[uid, idx, paragraphs, question], queue=CELERY_TASK_NAME,
                                     expires=(60 * 60 * 24))
         print(result.id)
+        output = result.get()
+
+        self.assertNotEqual(output, False)
 
     def tearDown(self):
         pass

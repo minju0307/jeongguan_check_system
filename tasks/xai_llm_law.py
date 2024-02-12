@@ -7,11 +7,11 @@ from urllib.parse import urljoin
 import requests
 from celery import Celery
 
-from config import MQ_CELERY_BROKER_URL, SERVICE_URL, CELERY_TASK_NAME
+from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, SERVICE_URL, CELERY_TASK_NAME
 from main import get_advice
 from mrc import generate_answer
 
-app = Celery(CELERY_TASK_NAME, broker=MQ_CELERY_BROKER_URL)
+app = Celery(CELERY_TASK_NAME, broker=MQ_CELERY_BROKER_URL, backend=MQ_CELERY_BACKEND_URL)
 
 # set OpenAI API key
 import openai
