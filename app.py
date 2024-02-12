@@ -1,3 +1,5 @@
+import logging
+import os
 import string
 import time
 from datetime import datetime
@@ -15,11 +17,9 @@ from werkzeug.utils import secure_filename
 from error_code import ErrorCode, ErrorElement
 from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
-from main import main, split_document_shorter, get_advice
-import os
-from config import SERVER_PORT, SERVER_HOST, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
+from main import main, split_document_shorter
+from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
     CELERY_TASK_NAME
-from mrc import generate_answer
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
 
@@ -54,6 +54,7 @@ dictConfig({
 })
 
 app = Flask(__name__)
+app.logger.setLevel(logging.DEBUG)
 app.config['SECRET_KEY'] = 'secret!'
 app.config['UPLOAD_FOLDER'] = os.path.join(APP_ROOT, UPLOAD_FOLDER)
 app.config["JSON_AS_ASCII"] = False  # 한국어 지원을 위한 설정
@@ -165,68 +166,43 @@ def processing():
 
     start_time = time.time()
 
-    gpt_ver = "gpt-4-1106-preview"
     top_k_jeongguan = 3
     top_k_sangbub = 3
 
     paragraph_results = []
-    print("**체크리스트 질문**")
+
+    # 체크리스트 질문 - 정관 맵핑
     for idx, q in enumerate(questions[:1]):  # test 용으로 2개만
         # create empty dir for idx (for callback test)
         os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
 
-        print(f"질문: {q}")
-        # 체크리스트 질문 - 정관 맵핑
+        # 모델을 이용해 체크리스트 질문 - 정관 검색
         paragraph_idxs = semantic_search_model.semantic_search(q, input_texts, top_k_jeongguan)
-        print(f"  문단 검색 결과: {paragraph_idxs}")
         outputs["mapping_paragraphs"].append(paragraph_idxs)
         paragraph_results.append(paragraph_idxs)
 
-    print(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
+    app.logger.debug(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
 
     start_time = time.time()
-    answer_results = []
+
     answer_task = f'{CELERY_TASK_NAME}.llm_answer'
     advice_task = f'{CELERY_TASK_NAME}.llm_advice'
 
     for idx, (q, paragraph_idxs) in enumerate(zip(questions, paragraph_results)):
+        # paragraph_idxs to paragraphs
         paragraphs = [input_texts[i] for i in paragraph_idxs]
-        print(paragraphs)
-        # answer = generate_answer(gpt_ver, "\n".join(paragraphs), q)
-        # answer_results.append(answer)
-        # print(f"  답변: {answer}")
-        # save answer to file
-        # write_file(os.path.join('tmp', uid, str(idx), 'answer.txt'), [answer])
 
         sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
 
-        # result = task.send_task(task_name, args=[uid, idx, paragraphs, q], queue=CELERY_TASK_NAME,
-        #                         expires=(60 * 60 * 24))
-
         chain = (
-            signature(answer_task, args=[uid, idx, paragraphs, q], app=task, queue=CELERY_TASK_NAME) |
-            signature(advice_task, args=[uid, idx, q, sangbub], app=task, queue=CELERY_TASK_NAME)
+                signature(answer_task, args=[uid, idx, paragraphs, q], app=task, queue=CELERY_TASK_NAME) |
+                signature(advice_task, args=[uid, idx, q, sangbub], app=task, queue=CELERY_TASK_NAME)
         )
 
         result = chain()
+        app.logger.debug(f"  Celery Result ID: {result.id}")
 
-        print(f"  답변: {result.id}")
-
-    print(f"Elapsed Time(Question-Answer): {time.time() - start_time:.2f} sec")
-
-    start_time = time.time()
-
-    # for q, answer in zip(questions, answer_results):
-        # 변호사 조언 생성
-        # sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
-        # print(f"  상법: {sangbub}")
-        # advice = get_advice(gpt_ver, q, answer, sangbub)
-        # print(f"  변호사 조언: {advice}")
-        #
-        # # save advice to file
-        # write_file(os.path.join('tmp', uid, str(idx), 'advice.txt'), [advice])
-
-    print(f"Elapsed Time(Answer-Advice): {time.time() - start_time:.2f} sec")
+    app.logger.debug(f"Elapsed Time(Question-Sangbub): {time.time() - start_time:.2f} sec")
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 
@@ -279,6 +255,10 @@ def callback_advice():
 
 @app.route("/get_result", methods=["GET"])
 def get_result():
+    """
+    UI에서 결과를 확인하기 위한 API (for demo)
+    :return:
+    """
     uid = request.args.get('uid')
 
     if not uid:
@@ -288,8 +268,6 @@ def get_result():
 
     # get all subdirs
     subdirs = [f for f in os.listdir(dest_dir) if os.path.isdir(os.path.join(dest_dir, f))]
-
-    print(subdirs)
 
     results = dict()
 
