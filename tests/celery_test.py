@@ -4,7 +4,7 @@ from shutil import rmtree
 
 from celery import Celery
 
-from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, APP_ROOT
+from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, APP_ROOT, DEFAULT_CALLBACK_URL
 
 
 class TestCelery(unittest.TestCase):
@@ -14,6 +14,7 @@ class TestCelery(unittest.TestCase):
     def test_generate_answer(self):
         uid = 'test'
         idx = 0
+        callback_url = DEFAULT_CALLBACK_URL
 
         # create a directory for the uid
         uid_path = os.path.join(APP_ROOT, 'tmp', uid)
@@ -28,7 +29,7 @@ class TestCelery(unittest.TestCase):
         question = '정기주주총회를 개최하는가?'
 
         task_name = f'{CELERY_TASK_NAME}.llm_answer'
-        result = self.app.send_task(task_name, args=[uid, idx, paragraphs, question], queue=CELERY_TASK_NAME,
+        result = self.app.send_task(task_name, args=[uid, idx, paragraphs, question, callback_url], queue=CELERY_TASK_NAME,
                                     expires=(60 * 60 * 24))
         print(result.id)
         output = result.get()
@@ -38,6 +39,7 @@ class TestCelery(unittest.TestCase):
     def test_generate_advice(self):
         uid = 'test'
         idx = 0
+        callback_url = DEFAULT_CALLBACK_URL
 
         # create a directory for the uid
         uid_path = os.path.join(APP_ROOT, 'tmp', uid)
@@ -61,7 +63,7 @@ class TestCelery(unittest.TestCase):
 """
 
         task_name = f'{CELERY_TASK_NAME}.llm_advice'
-        result = self.app.send_task(task_name, args=[answer, uid, idx, question, sangbub], queue=CELERY_TASK_NAME,
+        result = self.app.send_task(task_name, args=[answer, uid, idx, question, sangbub, callback_url], queue=CELERY_TASK_NAME,
                                     expires=(60 * 60 * 24))
 
         print(result.id)

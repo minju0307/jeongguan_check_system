@@ -21,7 +21,7 @@ openai.api_key = OPENAI_API_KEY
 
 
 @app.task(bind=True)
-def llm_answer(self, uid, idx, paragraphs, q):
+def llm_answer(self, uid, idx, paragraphs, q, callback_url):
     # shorten the task_id
     task_id = self.request.id
     task_id = task_id[:8]
@@ -30,9 +30,6 @@ def llm_answer(self, uid, idx, paragraphs, q):
     # print(f'({task_id}) x: {x}, y: {y}')
     answer = generate_answer(gpt_ver, "\n".join(paragraphs), q)
     logger.debug(answer)
-
-    # callback
-    callback_url = urljoin(SERVICE_URL, 'callback_answer')
 
     #
     # 1. uid not exist
@@ -67,7 +64,7 @@ def llm_answer(self, uid, idx, paragraphs, q):
 
 
 @app.task(bind=True)
-def llm_advice(self, answer, uid, idx, q, sangbub):
+def llm_advice(self, answer, uid, idx, q, sangbub, callback_url):
     # shorten the task_id
     task_id = self.request.id
     task_id = task_id[:8]
@@ -76,9 +73,6 @@ def llm_advice(self, answer, uid, idx, q, sangbub):
     # print(f'({task_id}) x: {x}, y: {y}')
     advice = get_advice(gpt_ver, q, answer, sangbub)
     logger.debug(advice)
-
-    # callback
-    callback_url = urljoin(SERVICE_URL, 'callback_advice')
 
     #
     # 1. uid not exist

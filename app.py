@@ -19,7 +19,7 @@ from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
 from main import main, split_document_shorter
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
-    CELERY_TASK_NAME
+    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
 
@@ -131,6 +131,7 @@ def index():
 def processing():
     # get flask post data
     mode = request.form.get('mode')
+    callback_url = request.form.get('callback_url')
 
     if mode == 'test':
         input_text = '\n'.join(read_file('input_samples/1.txt'))
@@ -142,6 +143,9 @@ def processing():
             file_path, file_url = results['file']
 
         input_text = '\n'.join(read_file(file_path))
+
+    if callback_url is None:
+        callback_url = DEFAULT_CALLBACK_URL
 
     outputs = dict()
 
@@ -195,8 +199,8 @@ def processing():
         sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
 
         chain = (
-                signature(answer_task, args=[uid, idx, paragraphs, q], app=task, queue=CELERY_TASK_NAME) |
-                signature(advice_task, args=[uid, idx, q, sangbub], app=task, queue=CELERY_TASK_NAME)
+                signature(answer_task, args=[uid, idx, paragraphs, q, callback_url], app=task, queue=CELERY_TASK_NAME) |
+                signature(advice_task, args=[uid, idx, q, sangbub, callback_url], app=task, queue=CELERY_TASK_NAME)
         )
 
         result = chain()
@@ -207,37 +211,15 @@ def processing():
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 
 
-@app.route("/callback_answer", methods=["POST"])
-def callback_answer():
+@app.route("/callback_result", methods=["POST"])
+def callback_result():
     # get flask post data
     uid = request.form.get('uid')
     idx = request.form.get('idx')
     answer = request.form.get('answer')
-
-    if not uid or not idx or not answer:
-        return json_response(msg=ErrorCode.INVALID_PARAMETER.msg, code=ErrorCode.INVALID_PARAMETER.code)
-
-    # check uid in tmp folder
-    if not os.path.exists(os.path.join('tmp', uid)):
-        return json_response(msg=ErrorCode.NOT_EXIST_UID.msg, code=ErrorCode.NOT_EXIST_UID.code)
-
-    # create idx dir
-    dest_dir = os.path.join('tmp', uid, idx)
-    os.makedirs(dest_dir, exist_ok=True)
-
-    write_file(os.path.join(dest_dir, 'answer.txt'), [answer])
-
-    return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
-
-
-@app.route("/callback_advice", methods=["POST"])
-def callback_advice():
-    # get flask post data
-    uid = request.form.get('uid')
-    idx = request.form.get('idx')
     advice = request.form.get('advice')
 
-    if not uid or not idx or not advice:
+    if not uid or not idx:
         return json_response(msg=ErrorCode.INVALID_PARAMETER.msg, code=ErrorCode.INVALID_PARAMETER.code)
 
     # check uid in tmp folder
@@ -248,7 +230,11 @@ def callback_advice():
     dest_dir = os.path.join('tmp', uid, idx)
     os.makedirs(dest_dir, exist_ok=True)
 
-    write_file(os.path.join(dest_dir, 'advice.txt'), [advice])
+    if answer:
+        write_file(os.path.join(dest_dir, 'answer.txt'), [answer])
+
+    if advice:
+        write_file(os.path.join(dest_dir, 'advice.txt'), [advice])
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
 
