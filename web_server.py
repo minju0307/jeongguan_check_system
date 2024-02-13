@@ -1,5 +1,6 @@
 import logging
 import os
+import ssl
 import string
 import time
 from datetime import datetime
@@ -745,4 +746,7 @@ if __name__ == "__main__":
     upload_folder = os.path.join(APP_ROOT, UPLOAD_FOLDER)
     os.makedirs(upload_folder, exist_ok=True)
 
-    app.run(host="0.0.0.0", port=port, debug=True)
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+    ssl_context.load_cert_chain(certfile='fullchain.pem', keyfile='privkey.pem')
+
+    app.run(host="0.0.0.0", port=port, debug=True, ssl_context=ssl_context)
