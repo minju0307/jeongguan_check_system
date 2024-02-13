@@ -20,7 +20,7 @@ from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
 from main import main, split_document_shorter
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
-    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH
+    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
 
@@ -747,6 +747,6 @@ if __name__ == "__main__":
     os.makedirs(upload_folder, exist_ok=True)
 
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-    ssl_context.load_cert_chain(certfile='fullchain.pem', keyfile='privkey.pem')
+    ssl_context.load_cert_chain(certfile=SSL_CERT, keyfile=SSL_KEY)
 
     app.run(host="0.0.0.0", port=port, debug=True, ssl_context=ssl_context)
