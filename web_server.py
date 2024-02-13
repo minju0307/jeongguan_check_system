@@ -126,7 +126,7 @@ def save_file_from_request(request, field='file', folder='temp'):
 
 @xai.route("/")
 def index():
-    return render_template('index.html')
+    return render_template('index.html', debug=DEBUG)
 
 
 @xai.route("/analyze", methods=["POST"])
@@ -177,7 +177,7 @@ def analyze():
 
     paragraph_results = []
 
-    questions = questions[:1] if DEBUG else questions
+    questions = questions[:3] if DEBUG else questions
 
     # 체크리스트 질문 - 정관 맵핑
     for idx, q in enumerate(questions):

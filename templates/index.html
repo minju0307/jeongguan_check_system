@@ -80,6 +80,14 @@ Law XAI - Demo
         let form_result = $('#form_result');
         form_result.submit(function (e) {
             e.preventDefault();
+
+            // check uid value
+            let uid = $('#uid').val();
+            if (uid === '') {
+                alert('문서 번호를 입력해주세요.');
+                return
+            }
+
             $.ajax({
                 url: this.action,
                 data: $(this).serialize(),
@@ -103,14 +111,16 @@ Law XAI - Demo
                 <form id="form_xai" class="mt-3" enctype="multipart/form-data"
                       action="{{ url_for('xai.analyze') }}">
                     <div class="mb-3 row">
-                        <label for="formFile" class="col-sm-3 col-form-label">파일(txt)</label>
+                        <label for="formFile" class="col-sm-3 col-form-label">정관파일(txt)</label>
                         <div class="col-sm-9">
                             <input class="form-control" type="file" id="formFile" name="file">
                         </div>
                     </div>
 
-                    <button class="btn btn-primary" type="submit">Submit</button>
-                    <button class="btn btn-light" type="submit" name="mode" value="test">Test Submit</button>
+                    <button class="btn btn-primary" type="submit">분석하기</button>
+                    {% if debug %}
+                    <button class="btn btn-light" type="submit" name="mode" value="test">테스트 분석</button>
+                    {% endif %}
                 </form>
             </div>
             <h3 class="mt-3">분석 결과</h3>
@@ -122,7 +132,7 @@ Law XAI - Demo
                                 <label for="uid" class="col-sm-3 col-form-label">문서 번호</label>
                                 <div class="col-sm-9">
                                     <input class="form-control" type="text" id="uid" name="uid"
-                                           value="202402122241112073" readonly>
+                                           value="">
                                 </div>
                             </div>
                             <button class="btn btn-primary" type="submit">결과보기</button>
