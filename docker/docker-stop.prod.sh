@@ -1,1 +1,3 @@
-docker compose -p prod down
+export ENVIRONMENT=prod
+
+docker compose down
