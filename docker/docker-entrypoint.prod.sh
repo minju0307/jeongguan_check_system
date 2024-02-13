@@ -8,5 +8,7 @@ service ssh start
 #        --NotebookApp.token="$JUPYTER_TOKEN"       `# Do not require token to access notebook` \
 #        --NotebookApp.password=""
 
+export PYTHONPATH=.
+python tasks/xai_llm_law.py > task_1.log 2>&1 &
 python web_server.py
 tail -f /dev/null
