@@ -40,10 +40,8 @@ def semantic_search(question, input_texts, top_k):
 
 
 class SemanticSearch:
-    def __init__(self):
+    def __init__(self, model_path):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        model_path = "multilabel_model"
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
         self.model = AutoModelForSequenceClassification.from_pretrained(

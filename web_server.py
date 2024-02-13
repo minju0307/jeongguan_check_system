@@ -19,7 +19,7 @@ from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
 from main import main, split_document_shorter
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
-    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL
+    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
 
@@ -63,8 +63,8 @@ app.json.sort_keys = True
 
 ALLOWED_EXTENSIONS = {'txt'}
 
-semantic_search_model = SemanticSearch()
-retrieval_search_model = RetrievalSearch()
+semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
+retrieval_search_model = RetrievalSearch(model_path=DPR_MODEL_PATH)
 
 task = Celery('tasks', broker=MQ_CELERY_BROKER_URL)
 

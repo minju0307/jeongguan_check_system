@@ -3,8 +3,7 @@
 .vscode
 venv
 db
-multilabel_model
-dpr_model
+models
 resources/openai_key.json
 
 ### JupyterNotebooks template
