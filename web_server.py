@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 
 import openai
 from celery import Celery, signature
-from flask import Flask, request, jsonify, json, render_template
+from flask import Flask, request, jsonify, json, render_template, Blueprint
 from jsonschema import validate
 from werkzeug.utils import secure_filename
 
@@ -20,7 +20,7 @@ from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
 from main import main, split_document_shorter
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
-    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY
+    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
 
@@ -63,6 +63,7 @@ app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 app.json.sort_keys = True
 
 ALLOWED_EXTENSIONS = {'txt'}
+xai = Blueprint('xai', __name__, url_prefix='/xai_law')
 
 semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
 retrieval_search_model = RetrievalSearch(model_path=DPR_MODEL_PATH)
@@ -123,12 +124,12 @@ def save_file_from_request(request, field='file', folder='temp'):
         return output_dict
 
 
-@app.route("/")
+@xai.route("/")
 def index():
     return render_template('index.html')
 
 
-@app.route("/analyze", methods=["POST"])
+@xai.route("/analyze", methods=["POST"])
 def analyze():
     # get flask post data
     mode = request.form.get('mode')
@@ -212,7 +213,7 @@ def analyze():
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 
 
-@app.route("/callback_result", methods=["POST"])
+@xai.route("/callback_result", methods=["POST"])
 def callback_result():
     # get flask post data
     uid = request.form.get('uid')
@@ -240,7 +241,7 @@ def callback_result():
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
 
 
-@app.route("/get_result", methods=["GET"])
+@xai.route("/get_result", methods=["GET"])
 def get_result():
     """
     UI에서 결과를 확인하기 위한 API (for demo)
@@ -734,6 +735,8 @@ def get_checklist_advice():  ## paramter : doc_id, checklist_id
         return jsonify(results)
 
 
+app.register_blueprint(xai)
+
 if __name__ == "__main__":
     openai_api_key = os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY)
     openai.api_key = openai_api_key
@@ -749,4 +752,4 @@ if __name__ == "__main__":
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
     ssl_context.load_cert_chain(certfile=SSL_CERT, keyfile=SSL_KEY)
 
-    app.run(host="0.0.0.0", port=port, debug=True, ssl_context=ssl_context)
+    app.run(host="0.0.0.0", port=port, debug=DEBUG, ssl_context=ssl_context)

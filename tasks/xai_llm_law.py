@@ -5,7 +5,7 @@ logger = get_task_logger(__name__)
 import requests
 from celery import Celery
 
-from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL
+from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL, DEBUG
 from main import get_advice
 from mrc import generate_answer
 
@@ -16,7 +16,7 @@ import openai
 from config import OPENAI_API_KEY
 
 openai.api_key = OPENAI_API_KEY
-
+VERIFY_SSL = False if DEBUG else True
 
 @app.task(bind=True)
 def llm_answer(self, uid, idx, paragraphs, q, callback_url):
@@ -39,7 +39,7 @@ def llm_answer(self, uid, idx, paragraphs, q, callback_url):
     }
 
     try:
-        response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data)
+        response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data, verify=VERIFY_SSL)
     except requests.exceptions.ConnectionError as e:
         logger.error(f'({task_id}) ConnectionError: {e}, {callback_url}')
         return False
@@ -82,7 +82,7 @@ def llm_advice(self, answer, uid, idx, q, sangbub, callback_url):
     }
 
     try:
-        response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data)
+        response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data, verify=VERIFY_SSL)
     except requests.exceptions.ConnectionError as e:
         logger.error(f'({task_id}) ConnectionError: {e}, {callback_url}')
         return False
