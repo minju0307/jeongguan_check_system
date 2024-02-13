@@ -18,6 +18,7 @@ from config import OPENAI_API_KEY
 openai.api_key = OPENAI_API_KEY
 VERIFY_SSL = False if DEBUG else True
 
+
 @app.task(bind=True)
 def llm_answer(self, uid, idx, paragraphs, q, callback_url):
     # shorten the task_id

@@ -177,8 +177,10 @@ def analyze():
 
     paragraph_results = []
 
+    questions = questions[:1] if DEBUG else questions
+
     # 체크리스트 질문 - 정관 맵핑
-    for idx, q in enumerate(questions[:1]):  # test 용으로 2개만
+    for idx, q in enumerate(questions):
         # create empty dir for idx (for callback test)
         os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
 
