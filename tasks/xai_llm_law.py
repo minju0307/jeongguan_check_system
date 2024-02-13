@@ -5,7 +5,7 @@ logger = get_task_logger(__name__)
 import requests
 from celery import Celery
 
-from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME
+from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL
 from main import get_advice
 from mrc import generate_answer
 
@@ -24,9 +24,8 @@ def llm_answer(self, uid, idx, paragraphs, q, callback_url):
     task_id = self.request.id
     task_id = task_id[:8]
 
-    gpt_ver = "gpt-4-1106-preview"
     # print(f'({task_id}) x: {x}, y: {y}')
-    answer = generate_answer(gpt_ver, "\n".join(paragraphs), q)
+    answer = generate_answer(GPT_MODEL, "\n".join(paragraphs), q)
     logger.debug(answer)
 
     #
@@ -67,9 +66,8 @@ def llm_advice(self, answer, uid, idx, q, sangbub, callback_url):
     task_id = self.request.id
     task_id = task_id[:8]
 
-    gpt_ver = "gpt-4-1106-preview"
     # print(f'({task_id}) x: {x}, y: {y}')
-    advice = get_advice(gpt_ver, q, answer, sangbub)
+    advice = get_advice(GPT_MODEL, q, answer, sangbub)
     logger.debug(advice)
 
     #
@@ -110,7 +108,7 @@ if __name__ == "__main__":
     worker_options = {
         'loglevel': 'INFO',
         'traceback': True,
-        'concurrency': 10,
+        'concurrency': 30,
     }
 
     # set queue
