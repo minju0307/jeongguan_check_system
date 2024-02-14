@@ -177,7 +177,8 @@ def analyze():
 
     paragraph_results = []
 
-    questions = questions[:3] if DEBUG else questions
+    sentence_embeddings = semantic_search_model.get_embedding(input_texts)
+    sentence_embeddings = sentence_embeddings.cpu().numpy()
 
     # 체크리스트 질문 - 정관 맵핑
     for idx, q in enumerate(questions):
@@ -185,11 +186,14 @@ def analyze():
         os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
 
         # 모델을 이용해 체크리스트 질문 - 정관 검색
-        paragraph_idxs = semantic_search_model.semantic_search(q, input_texts, top_k_jeongguan)
+        paragraph_idxs = semantic_search_model.semantic_search(q, sentence_embeddings, top_k_jeongguan)
         outputs["mapping_paragraphs"].append(paragraph_idxs)
         paragraph_results.append(paragraph_idxs)
 
     app.logger.debug(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
+
+    questions = questions[:3] if DEBUG else questions
+    paragraph_results = paragraph_results[:3] if DEBUG else paragraph_results
 
     start_time = time.time()
 

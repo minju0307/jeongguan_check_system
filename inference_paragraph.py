@@ -1,3 +1,7 @@
+import logging
+import time
+from typing import List, Union
+
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sklearn.metrics.pairwise import cosine_similarity
@@ -48,7 +52,7 @@ class SemanticSearch:
             model_path, output_hidden_states=True
         ).to(self.device)
 
-    def get_embedding(self, sentences):
+    def get_embedding(self, sentences: List[str]):
         encoded_input = self.tokenizer(
             sentences, padding=True, truncation=True, return_tensors="pt"
         )
@@ -60,14 +64,16 @@ class SemanticSearch:
         cls_embeddings = last_hidden_states[:, 0, :]
         return cls_embeddings
 
-    def semantic_search(self, question, input_texts, top_k):
-        paragraphs = []
-
+    def semantic_search(self, question: str, input_texts: Union[List[str], np.ndarray], top_k: int):
         target_embedding = self.get_embedding([question])
-        sentence_embeddings = self.get_embedding(input_texts)
-
         target_embedding = target_embedding.cpu().numpy()
-        sentence_embeddings = sentence_embeddings.cpu().numpy()
+
+        if isinstance(input_texts, list):
+            input_texts = np.array(input_texts)
+            sentence_embeddings = self.get_embedding(input_texts)
+            sentence_embeddings = sentence_embeddings.cpu().numpy()
+        else:
+            sentence_embeddings = input_texts
 
         similarities = cosine_similarity(target_embedding, sentence_embeddings)
         top_k_indices = np.argsort(similarities[0])[-top_k:][::-1]
