@@ -5,6 +5,7 @@ import openai
 import os
 import fire
 
+from config import MULTILABEL_MODEL_PATH, DPR_MODEL_PATH
 from mrc import generate_answer
 import inference_checklist as inference_checklist
 from inference_reference import main as retrieval_reference
@@ -90,7 +91,7 @@ def get_checklist(input_text):
 
 def get_paragraph(question, input_texts, top_k):
     # 체크리스트 질문과 관련된 문단을 검색 (@top_k)
-    paragraph_idxs = semantic_search(question, input_texts, top_k)
+    paragraph_idxs = semantic_search(question, input_texts, top_k, model_path=MULTILABEL_MODEL_PATH)
 
     paragraphs = [input_texts[k] for k in paragraph_idxs]
 
@@ -104,7 +105,7 @@ def get_mrc_answer(gpt_ver, input_text, question):
 
 def get_reference(top_k, question):
     # 질문과 관련된 상법 조항 검색
-    return retrieval_reference(top_k, question)
+    return retrieval_reference(top_k, question, model_path=DPR_MODEL_PATH)
 
 
 def get_advice(gpt_ver, question, mrc_answer, references):
@@ -120,11 +121,9 @@ def main(
         input_text,
         top_k_jeongguan=3,
         top_k_sangbub=3,
-        gpt_ver="gpt-4-1106-preview",
-        openai_key_file_path="resources/openai_key.json",
+        gpt_ver="gpt-4-1106-preview"
 ):
     outputs = {}
-    assign_api_key(openai_key_file_path)
 
     outputs["doc_id"] = input_id
     outputs["doc_text"] = input_text

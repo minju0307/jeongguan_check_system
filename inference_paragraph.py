@@ -22,9 +22,8 @@ def get_embedding(sentences, model, tokenizer):
     return cls_embeddings
 
 
-def semantic_search(question, input_texts, top_k):
+def semantic_search(question, input_texts, top_k, model_path):
     paragraphs = []
-    model_path = "multilabel_model"
 
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model = AutoModelForSequenceClassification.from_pretrained(

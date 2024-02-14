@@ -47,17 +47,17 @@ def retrieval_query(tokenizer, model, query, index, top_k, device):
     return query, references
 
 
-def main(top_k, query):
+def main(top_k, query, model_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     config_dict = {
-        "model_path": "dpr_model/my_model.pt",
-        "optim_path": "dpr_model/my_model_optim.pt",
+        "model_path": f"{model_path}/my_model.pt",
+        "optim_path": f"{model_path}/my_model_optim.pt",
         "lr": 1e-5,
         "betas": (0.9, 0.99),
         "num_warmup_steps": 1000,
         "num_training_steps": 2670,
-        "output_path": "dpr_model/answeronly.index",
+        "output_path": f"{model_path}/answeronly.index",
         "test_set": "dataset/question_45.csv",
         "top_k": top_k,
     }
