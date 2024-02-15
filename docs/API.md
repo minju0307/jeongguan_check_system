@@ -17,15 +17,17 @@ sequenceDiagram
   participant MRC Worker
   participant Advice Worker
   participant GPT4 API
-  A->API Server: /analyze
-  API Server-->A: response uid
-  API Server->Message Queue:Task 실행(async)
-  Message Queue->MRC Worker: MRC 응답 요청
-  MRC Worker->GPT4 API: 생성형 응답 요청
-  MRC Worker-->A: callback
-  MRC Worker->Advice Worker: 변호사 조언 생성 요청
-  Advice Worker->GPT4 API: 생성형 응답 요청
-  Advice Worker-->A: callback
+  A->>API Server: /analyze
+  API Server-->>A: response uid
+  par 각 질문에 대한 답변 생성 (병렬처리)
+    API Server-)Message Queue:Task 실행(async)
+    Message Queue-)MRC Worker: MRC 응답 요청
+    MRC Worker->>GPT4 API: 생성형 응답 요청
+    MRC Worker-->>A: callback
+    MRC Worker->>Advice Worker: 변호사 조언 생성 요청
+    Advice Worker->>GPT4 API: 생성형 응답 요청
+    Advice Worker-->>A: callback
+  end
 
 ```
 
