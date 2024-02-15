@@ -8,22 +8,24 @@ API의 동작은 아래 URL에서 확인하실 수 있습니다.
 
 API의 동작의 순서는 아래와 같습니다.
 
-```sequence
-participant Client
-participant API Server
-participant Message Queue
-participant MRC Worker
-participant Advice Worker
-participant GPT4 API
-Client->API Server: /analyze
-API Server-->Client: response uid
-API Server->Message Queue:Task 실행(async)
-Message Queue->MRC Worker: MRC 응답 요청
-MRC Worker->GPT4 API: 생성형 응답 요청
-MRC Worker-->Client: callback
-MRC Worker->Advice Worker: 변호사 조언 생성 요청
-Advice Worker->GPT4 API: 생성형 응답 요청
-Advice Worker-->Client: callback
+```mermaid
+sequenceDiagram
+	autonumber
+	actor A as client
+  participant API Server
+  participant Message Queue
+  participant MRC Worker
+  participant Advice Worker
+  participant GPT4 API
+  A->API Server: /analyze
+  API Server-->A: response uid
+  API Server->Message Queue:Task 실행(async)
+  Message Queue->MRC Worker: MRC 응답 요청
+  MRC Worker->GPT4 API: 생성형 응답 요청
+  MRC Worker-->A: callback
+  MRC Worker->Advice Worker: 변호사 조언 생성 요청
+  Advice Worker->GPT4 API: 생성형 응답 요청
+  Advice Worker-->A: callback
 
 ```
 
