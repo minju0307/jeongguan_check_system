@@ -65,10 +65,20 @@ app.json.sort_keys = True
 ALLOWED_EXTENSIONS = {'txt'}
 xai = Blueprint('xai', __name__, url_prefix='/xai_law')
 
-semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
-retrieval_search_model = RetrievalSearch(model_path=DPR_MODEL_PATH)
+with app.app_context():
+    semantic_search_model = None
+    retrieval_search_model = None
 
 task = Celery('tasks', broker=MQ_CELERY_BROKER_URL)
+
+
+def init_models():
+    global semantic_search_model, retrieval_search_model
+
+    if semantic_search_model is None:
+        semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
+    if retrieval_search_model is None:
+        retrieval_search_model = RetrievalSearch(model_path=DPR_MODEL_PATH)
 
 
 def save_file_from_request(request, field='file', folder='temp'):
@@ -126,11 +136,15 @@ def save_file_from_request(request, field='file', folder='temp'):
 
 @xai.route("/")
 def index():
+    init_models()
+
     return render_template('index.html', debug=DEBUG)
 
 
 @xai.route("/analyze", methods=["POST"])
 def analyze():
+    init_models()
+
     # get flask post data
     mode = request.form.get('mode')
     callback_url = request.form.get('callback_url')
