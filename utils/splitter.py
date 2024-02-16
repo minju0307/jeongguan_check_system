@@ -150,5 +150,10 @@ class JeongguanSplitter:
     def get_sub_chapters(self):
         return self.sub_chapters
 
-    def get_merged_chapters(self):
-        return self.merged_chapters
+    def get_merged_chapters(self, single_list=False):
+        if single_list:
+            return [sub_chapter for sub_chapter_list in self.merged_chapters for sub_chapter in sub_chapter_list]
+        else:
+            return self.merged_chapters
+
+

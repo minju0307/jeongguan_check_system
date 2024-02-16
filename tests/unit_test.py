@@ -58,5 +58,8 @@ class TestUnit(unittest.TestCase):
                 filtered_content = filter_text(sub_chapter)
                 print(f'  merged {j + 1}(len: {len(sub_chapter)}): {filtered_content}')
 
+        # merged_chapters (single list)
+        print(splitter.get_merged_chapters(single_list=True))
+
     def tearDown(self):
         pass
