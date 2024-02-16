@@ -1,8 +1,9 @@
+import os.path
 import unittest
 from pprint import pprint
 
 from main import split_document_shorter
-from utils.utils import read_file
+from utils.utils import read_file, load_json
 
 
 def filter_text(text):
@@ -14,30 +15,54 @@ def split_content(content, chapter_pattern, verbose=False):
     import re
 
     # find chapter index from content
-    chapter_idx = [m.start() for m in re.finditer(chapter_pattern, content)]
+    chapter_idxs = [(m.start(), m.end()) for m in re.finditer(chapter_pattern, content)]
 
     if verbose:
         print(f'\nsplit_content: {chapter_pattern}')
 
     # print chapeter content
-    split_content = []
+    title_list = []
+    content_list = []
+
+    # 패턴에 해당하는 텍스트
+    for idx, (start, end) in enumerate(chapter_idxs):
+        chapter_title = content[start:end].strip()
+        title_list.append(chapter_title)
+
     prev_idx = 0
-    for idx, chapter in enumerate(chapter_idx):
-        chapter_content = content[prev_idx:chapter]
-        split_content.append(chapter_content)
+
+    # 패턴 인덱스를 이용한 텍스트 분리
+    for idx, (start, end) in enumerate(chapter_idxs):
+        if prev_idx == 0:
+            prev_idx = start
+            continue
+
+        chapter_content = content[prev_idx:start]
+        content_list.append(chapter_content)
         filtered_content = filter_text(chapter_content)
 
         if verbose:
             print(f'split {idx + 1}(len:{len(chapter_content)}): {filtered_content}')
 
-        prev_idx = chapter
+        prev_idx = start
 
-    return split_content
+    # add last content
+    last_content = content[prev_idx:]
+    content_list.append(last_content)
+    filtered_content = filter_text(last_content)
+
+    if verbose:
+        print(f'split {len(chapter_idxs) + 1}(len:{len(last_content)}): {filtered_content}')
+
+    assert len(title_list) == len(content_list)
+
+    return title_list, content_list
 
 
 class JeongguanSplitter:
-    def __init__(self, content, verbose=False):
+    def __init__(self, content, merge_len=1200, verbose=False):
         self.content = content
+        self.merge_len = merge_len
         self.verbose = verbose
 
         chapter_pattern = r'((\n)제\d+장.+)'
@@ -49,20 +74,27 @@ class JeongguanSplitter:
         self.merged_chapters = self.merge_sub_chapters(self.sub_chapters)
 
     def split_chapters(self, chapter_pattern):
-        chapters = split_content(self.content, chapter_pattern, verbose=self.verbose)
-        return chapters[1:]  # 첫번째 항목에는 일반적인 내용만 있어서 제외
+        titles, chapters = split_content(self.content, chapter_pattern, verbose=self.verbose)
+
+        # 보칙 제거
+        for idx, title in enumerate(titles):
+            new_title = ''.join(title.split())
+            if '보칙' in new_title:
+                titles.pop(idx)
+                chapters.pop(idx)
+
+        return chapters
 
     def split_sub_chapters(self, sub_chapter_pattern):
         sub_chapters = []
         for chapter in self.chapters:
-            splitted_content = split_content(chapter, sub_chapter_pattern, verbose=self.verbose)
+            _, splitted_content = split_content(chapter, sub_chapter_pattern, verbose=self.verbose)
             sub_chapters.append(splitted_content)
 
         return sub_chapters
 
     def merge_sub_chapters(self, sub_chapters):
-        # merge sub_chapters to around 1200 length
-
+        # merge sub_chapters to around merge_len
         merged_chapters = []
 
         for sub_chapter_list in sub_chapters:
@@ -70,7 +102,7 @@ class JeongguanSplitter:
             merged_text = ''
 
             for sub_chapter in sub_chapter_list:
-                if len(merged_text) + len(sub_chapter) > 1200:
+                if len(merged_text) + len(sub_chapter) > self.merge_len:
                     merged_sub_chapters.append(merged_text)
                     merged_text = sub_chapter
                 else:
@@ -110,8 +142,16 @@ class TestUnit(unittest.TestCase):
         print()
 
     def test_split_jeongguan(self):
-        input_lines = read_file('../input_samples/1.txt')
-        len_chapter = 7
+        file_path = '../input_samples/1.txt'
+        # file_path = '../input_samples/61.txt'
+        file = os.path.basename(file_path)
+        input_lines = read_file(file_path)
+
+        label_dict = load_json('../input_samples/label.json')
+        label_info = label_dict[file]
+
+        num_chapters = label_info['num_chapters']
+        num_sub_chapters = label_info['num_sub_chapters']
 
         content = '\n'.join(input_lines).strip()
 
@@ -121,7 +161,10 @@ class TestUnit(unittest.TestCase):
         sub_chapters = splitter.get_sub_chapters()
         merged_chapters = splitter.get_merged_chapters()
 
-        self.assertEquals(len_chapter, len(chapters))
+        self.assertEquals(num_chapters, len(chapters))
+
+        for idx, sub_chapter_list in enumerate(sub_chapters):
+            self.assertEquals(num_sub_chapters[idx], len(sub_chapter_list))
 
         # print merged chapters
         print(f'\nmerge sub_chapters')

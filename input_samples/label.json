@@ -1,0 +1,11 @@
+{
+    "1.txt": {
+        "num_chapters": 7,
+        "num_sub_chapters": [4, 13, 4, 6, 15, 3, 5]
+    },
+    "61.txt": {
+        "num_chapters": 7,
+        "num_sub_chapters": [4, 13, 4, 6, 15, 3, 5]
+    }
+
+}
