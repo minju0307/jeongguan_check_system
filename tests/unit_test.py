@@ -27,6 +27,7 @@ def split_content(content, chapter_pattern, verbose=False):
     for idx, (start, end) in enumerate(chapter_idxs):
         chapter_title = content[start:end].strip()
         title_list.append(chapter_title)
+        print(f'chapter {idx + 1}: {chapter_title}')
 
     prev_idx = 0
 
@@ -57,7 +58,33 @@ def split_content(content, chapter_pattern, verbose=False):
 
     assert len(title_list) == len(content_list)
 
-    return title_list, content_list
+    # validate title numbering: 번호가 같거나 크지 않을 경우 제거
+    prev_num = 0
+    new_title_list = title_list.copy()
+    new_content_list = content_list.copy()
+
+    idx = 0
+    for i, title in enumerate(title_list):
+        cur_num = int(re.findall(r'\d+', title)[0])
+
+        if prev_num == 0:
+            prev_num = cur_num
+
+        if cur_num  == prev_num + 1 or cur_num == prev_num:
+            prev_num = cur_num
+            idx += 1
+        else:
+            # remove element
+            new_title_list.pop(idx)
+            new_content_list.pop(idx)
+
+    assert len(new_title_list) == len(new_content_list)
+
+    # print chapter title
+    for idx, title in enumerate(new_title_list):
+        print(f'filtered {idx + 1}: {title}')
+
+    return new_title_list, new_content_list
 
 
 class JeongguanSplitter:
@@ -65,9 +92,8 @@ class JeongguanSplitter:
         self.merge_len = merge_len
         self.verbose = verbose
 
-        chapter_pattern = r'((\n)제\s\d+\s장.+)'
-        # sub_chapter_pattern = r'((\n)제\d+조.+)'
-        sub_chapter_pattern = r'((\n)제\s\d+\s조.+\(.+\))'
+        chapter_pattern = r'((\n)제[ ]{0,}\d+[ ]{0,}장.+)'
+        sub_chapter_pattern = r'(\n)제[ ]{0,}\d{,2}[ ]{0,}조([의]?[ ]{0,}\d{,2})'
 
         space_pattern = r'[ ]{2,}'
         self.content = re.sub(space_pattern, ' ', content)
@@ -81,9 +107,10 @@ class JeongguanSplitter:
         titles, chapters = split_content(self.content, chapter_pattern, verbose=self.verbose)
 
         # 보칙 제거
+        pattern_list = ['보칙', '부칙']
         for idx, title in enumerate(titles):
             new_title = ''.join(title.split())
-            if '보칙' in new_title:
+            if any([pattern in new_title for pattern in pattern_list]):
                 titles.pop(idx)
                 chapters.pop(idx)
 
@@ -92,8 +119,8 @@ class JeongguanSplitter:
     def split_sub_chapters(self, sub_chapter_pattern):
         sub_chapters = []
         for chapter in self.chapters:
-            _, splitted_content = split_content(chapter, sub_chapter_pattern, verbose=self.verbose)
-            sub_chapters.append(splitted_content)
+            _, splitted_list = split_content(chapter, sub_chapter_pattern, verbose=self.verbose)
+            sub_chapters.append(splitted_list)
 
         return sub_chapters
 
@@ -147,7 +174,9 @@ class TestUnit(unittest.TestCase):
 
     def test_split_jeongguan(self):
         # file_path = '../input_samples/1.txt'
-        file_path = '../input_samples/61.txt'
+        # file_path = '../input_samples/61.txt'
+        # file_path = '../input_samples/83.txt'
+        file_path = '../input_samples/138.txt'
         file = os.path.basename(file_path)
         input_lines = read_file(file_path)
 
