@@ -74,7 +74,11 @@ def split_content(content, chapter_pattern, verbose=False):
             prev_num = cur_num
             idx += 1
         else:
-            # remove element
+            # merge element to previous element
+            print(f'## merge {i} and {i + 1} (idx: {idx})')
+
+            new_content_list[idx - 1] += new_content_list[idx]
+
             new_title_list.pop(idx)
             new_content_list.pop(idx)
 
@@ -176,7 +180,8 @@ class TestUnit(unittest.TestCase):
         # file_path = '../input_samples/1.txt'
         # file_path = '../input_samples/61.txt'
         # file_path = '../input_samples/83.txt'
-        file_path = '../input_samples/138.txt'
+        # file_path = '../input_samples/138.txt'
+        file_path = '../input_samples/148.txt'
         file = os.path.basename(file_path)
         input_lines = read_file(file_path)
 
