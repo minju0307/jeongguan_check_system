@@ -1,4 +1,5 @@
 import os.path
+import re
 import unittest
 from pprint import pprint
 
@@ -12,8 +13,6 @@ def filter_text(text):
 
 
 def split_content(content, chapter_pattern, verbose=False):
-    import re
-
     # find chapter index from content
     chapter_idxs = [(m.start(), m.end()) for m in re.finditer(chapter_pattern, content)]
 
@@ -32,7 +31,8 @@ def split_content(content, chapter_pattern, verbose=False):
     prev_idx = 0
 
     # 패턴 인덱스를 이용한 텍스트 분리
-    for idx, (start, end) in enumerate(chapter_idxs):
+    idx = 0
+    for i, (start, end) in enumerate(chapter_idxs):
         if prev_idx == 0:
             prev_idx = start
             continue
@@ -45,6 +45,7 @@ def split_content(content, chapter_pattern, verbose=False):
             print(f'split {idx + 1}(len:{len(chapter_content)}): {filtered_content}')
 
         prev_idx = start
+        idx += 1
 
     # add last content
     last_content = content[prev_idx:]
@@ -52,7 +53,7 @@ def split_content(content, chapter_pattern, verbose=False):
     filtered_content = filter_text(last_content)
 
     if verbose:
-        print(f'split {len(chapter_idxs) + 1}(len:{len(last_content)}): {filtered_content}')
+        print(f'split {idx + 1}(len:{len(last_content)}): {filtered_content}')
 
     assert len(title_list) == len(content_list)
 
@@ -61,12 +62,15 @@ def split_content(content, chapter_pattern, verbose=False):
 
 class JeongguanSplitter:
     def __init__(self, content, merge_len=1200, verbose=False):
-        self.content = content
         self.merge_len = merge_len
         self.verbose = verbose
 
-        chapter_pattern = r'((\n)제\d+장.+)'
-        sub_chapter_pattern = r'((\n)제\d+조.+)'
+        chapter_pattern = r'((\n)제\s\d+\s장.+)'
+        # sub_chapter_pattern = r'((\n)제\d+조.+)'
+        sub_chapter_pattern = r'((\n)제\s\d+\s조.+\(.+\))'
+
+        space_pattern = r'[ ]{2,}'
+        self.content = re.sub(space_pattern, ' ', content)
 
         self.chapters = self.split_chapters(chapter_pattern)
         self.sub_chapters = self.split_sub_chapters(sub_chapter_pattern)
@@ -142,8 +146,8 @@ class TestUnit(unittest.TestCase):
         print()
 
     def test_split_jeongguan(self):
-        file_path = '../input_samples/1.txt'
-        # file_path = '../input_samples/61.txt'
+        # file_path = '../input_samples/1.txt'
+        file_path = '../input_samples/61.txt'
         file = os.path.basename(file_path)
         input_lines = read_file(file_path)
 
@@ -170,9 +174,9 @@ class TestUnit(unittest.TestCase):
         print(f'\nmerge sub_chapters')
         for idx, sub_chapter_list in enumerate(merged_chapters):
             print(f'chapter {idx + 1}')
-            for sub_chapter in sub_chapter_list:
+            for j, sub_chapter in enumerate(sub_chapter_list):
                 filtered_content = filter_text(sub_chapter)
-                print(f'merged {idx + 1}(len: {len(sub_chapter)}): {filtered_content}')
+                print(f'  merged {j + 1}(len: {len(sub_chapter)}): {filtered_content}')
 
     def tearDown(self):
         pass
