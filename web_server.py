@@ -178,6 +178,7 @@ def analyze():
     # input_texts = split_document_shorter(input_text)
     splitter = JeongguanSplitter(input_text, verbose=True)
     input_texts = splitter.get_merged_chapters(single_list=True)
+    document = splitter.get_document()
 
     outputs["doc_paragraphs"] = input_texts
     outputs["mapping_paragraphs"] = []
@@ -187,6 +188,7 @@ def analyze():
     questions = list(questions_dict.keys())
 
     outputs["checklist_questions"] = questions
+    outputs["document"] = document
 
     start_time = time.time()
 

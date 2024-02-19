@@ -38,17 +38,45 @@ sequenceDiagram
 ### 정관 분석 요청
 
 - **URL**: `/analyze`
+
 - **Method**: `POST`
+
 - **Path Parameters**:  
+
   - - `file`: 정관 파일(텍스트 형태의 데이터)
     - `callback_url`: callback을 받고자 하는 URL 주소
+
 - **Response**: 
+
   - **Type**: `Content-Type: application/json`
 
   - **data**:
+
     - `checklist_questions`: 56개의 qustions을 순서대로 응답
+
     - `doc_paragraphs`: 분할된 문단 리스트
+
     - `mapping_paragraphs`: 각 질문과 매핑된 문단 인덱스
+
+    - `document`: parser에 의해 각 장별로 분리된 내용
+
+      - ```json
+        // 형식 예
+        [
+        	{
+            "title": "제 1장 총 칙",
+            "content": "제 1조(상호)..."
+        	},
+        	{
+            "title": "제 2장 주식과 주권",
+            "content": "제 5조(주식의 총수)..."
+        	},
+          ...
+        ]
+        ```
+
+      - 
+
     - `uid`: 생성된 고유값
 
 
