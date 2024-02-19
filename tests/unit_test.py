@@ -1,5 +1,6 @@
 import os
 import unittest
+from pprint import pprint
 
 from main import split_document_shorter
 from utils.splitter import filter_text, JeongguanSplitter
@@ -23,11 +24,16 @@ class TestUnit(unittest.TestCase):
         print()
 
     def test_split_jeongguan(self):
-        # file_path = '../input_samples/1.txt'
-        # file_path = '../input_samples/61.txt'
-        # file_path = '../input_samples/83.txt'
-        # file_path = '../input_samples/138.txt'
-        file_path = '../input_samples/148.txt'
+        file_dir = '../input_samples'
+        files = ['1.txt', '61.txt', '83.txt', '138.txt', '148.txt']
+
+        for file in files:
+            file_path = os.path.join(file_dir, file)
+            print(f'file: {file}')
+            self.split_jeongguan(file_path)
+
+    def split_jeongguan(self, file_path):
+
         file = os.path.basename(file_path)
         input_lines = read_file(file_path)
 
@@ -41,6 +47,7 @@ class TestUnit(unittest.TestCase):
 
         splitter = JeongguanSplitter(content, verbose=True)
 
+        titles = splitter.get_titles()
         chapters = splitter.get_chapters()
         sub_chapters = splitter.get_sub_chapters()
         merged_chapters = splitter.get_merged_chapters()
@@ -51,7 +58,7 @@ class TestUnit(unittest.TestCase):
             self.assertEquals(num_sub_chapters[idx], len(sub_chapter_list))
 
         # print merged chapters
-        print(f'\nmerge sub_chapters')
+        print(f'\nmerge sub_chapters:')
         for idx, sub_chapter_list in enumerate(merged_chapters):
             print(f'chapter {idx + 1}')
             for j, sub_chapter in enumerate(sub_chapter_list):
@@ -59,7 +66,12 @@ class TestUnit(unittest.TestCase):
                 print(f'  merged {j + 1}(len: {len(sub_chapter)}): {filtered_content}')
 
         # merged_chapters (single list)
+        print(f'\nprint sub_chapters (single list):')
         print(splitter.get_merged_chapters(single_list=True))
+
+        # print document
+        print(f'\nprint document:')
+        pprint(splitter.get_document()[0])
 
     def tearDown(self):
         pass
