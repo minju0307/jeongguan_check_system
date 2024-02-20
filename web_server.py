@@ -12,15 +12,16 @@ from urllib.parse import urljoin
 import openai
 from celery import Celery, signature
 from flask import Flask, request, jsonify, json, render_template, Blueprint
+from flask_cors import CORS
 from jsonschema import validate
 from werkzeug.utils import secure_filename
 
 from error_code import ErrorCode, ErrorElement
 from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
-from main import main, split_document_shorter
+from main import main
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
-    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG
+    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX
 from utils.splitter import JeongguanSplitter
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
@@ -63,12 +64,14 @@ app.config["JSON_AS_ASCII"] = False  # 한국어 지원을 위한 설정
 app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 app.json.sort_keys = True
 
+CORS(app, resources={f'/{URL_PREFIX}/*': {'origins': '*'}})
+
 ALLOWED_EXTENSIONS = {'txt'}
-xai = Blueprint('xai', __name__, url_prefix='/xai_law')
+xai = Blueprint('xai', __name__, url_prefix=f'/{URL_PREFIX}')
 
 with app.app_context():
-    semantic_search_model = None
-    retrieval_search_model = None
+    semantic_search_model: SemanticSearch = None
+    retrieval_search_model: RetrievalSearch = None
 
 task = Celery('tasks', broker=MQ_CELERY_BROKER_URL)
 
@@ -188,6 +191,13 @@ def analyze():
     questions = list(questions_dict.keys())
 
     outputs["checklist_questions"] = questions
+
+    # document 유사도 분석
+    # TODO: 유사도 분석 로직 필요
+    for idx, paragraph_dict in enumerate(document):
+        paragraph_dict['score'] = 0.0
+        document[idx] = paragraph_dict
+
     outputs["document"] = document
 
     start_time = time.time()

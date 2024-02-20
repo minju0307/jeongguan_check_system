@@ -8,3 +8,4 @@ fire==0.5.0
 flask==3.0.0
 jsonschema==4.21.0
 celery
+flask-cors
