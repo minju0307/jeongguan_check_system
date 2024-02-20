@@ -4,7 +4,26 @@ Law XAI - Demo
 {% endblock %}
 
 {% block extra_head_after %}
+<style>
+    #document {
+        border: 1px solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+    }
+    .scrollspy-example {
+        height: 400px;
+        overflow: auto;
+    }
+</style>
 <script type="text/javascript">
+    function nl2br(str) {
+        try {
+            return str.replace(/\n/g, "<br />");
+        } catch (e) {
+            console.log(e);
+            console.log(str);
+        }
+    }
+
     $(document).ready(function () {
         console.log('ready');
 
@@ -20,6 +39,37 @@ Law XAI - Demo
             let uid = data.uid;
             $('#uid').val(uid);
 
+            let document = data.document;
+
+            // loop document
+            let document_keys = Object.keys(document);
+            let document_len = document_keys.length;
+            for (let i = 0; i < document_len; i++) {
+                let paragraph = document[i];
+
+                let score = paragraph["score"];
+
+                // get element by id
+                let list_example = $('#list-example');
+
+                // create list item
+                let list_item = $('<a>').addClass('list-group-item list-group-item-action')
+                    .attr('href', '#list-item-' + i)
+                    .text(paragraph["title"]);
+                list_example.append(list_item);
+
+                // create content
+                let content = $('#list-content');
+
+                let content_title = $('<h4>').attr('id', 'list-item-' + i).text(paragraph["title"] + ' (Score: ' + score + ')' );
+                let content_paragraph = $('<p>').attr('class', 'p-3').html(nl2br(paragraph["content"]));
+                content.append(content_title);
+                content.append(content_paragraph);
+            }
+            // refresh non-visible scrollspy
+            $('[data-bs-spy="scroll"]').each(function () {
+                var $spy = $(this).scrollspy('refresh');
+            });
         }
 
         let form_xai = $('#form_xai');
@@ -134,12 +184,30 @@ Law XAI - Demo
                                            value="">
                                 </div>
                             </div>
+                            <div>
+                                <h4 class="mt-3">표준정관 유사도 분석</h4>
+                                <div id="document" class="row">
+                                    <div class="col-2 mt-3">
+                                        <div id="list-example" class="list-group">
+<!--                                             <a class="list-group-item list-group-item-action" href="#list-item-1">Item 1</a>-->
+                                        </div>
+                                    </div>
+                                    <div class="col-10 mt-3">
+                                        <div id="list-content" data-bs-spy="scroll" data-bs-target="#list-example"
+                                             data-bs-smooth-scroll="true" class="scrollspy-example" tabindex="0">
+<!--                                            <h4 id="list-item-1">Item 1</h4>-->
+<!--                                            <p>...</p>-->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <button class="btn btn-primary" type="submit">결과보기</button>
                         </form>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
+                        <h4 class="mt-3">체크리스트 분석</h4>
                         <table id="table_result" class="table">
                             <thead>
                             <tr>
