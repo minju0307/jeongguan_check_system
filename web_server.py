@@ -293,7 +293,8 @@ def get_result():
     # get all subdirs
     subdirs = [f for f in os.listdir(dest_dir) if os.path.isdir(os.path.join(dest_dir, f))]
 
-    results = dict()
+    output_dict = dict()
+    results = []
 
     questions_dict = load_json('data/jeongguan_questions_56.json')
     questions = list(questions_dict.keys())
@@ -302,24 +303,40 @@ def get_result():
         # check if idx dir exists
         idx = str(idx)
 
-        results[idx] = dict()
-        results[idx]['question'] = q
+        result = dict()
+        result['question'] = q
 
         if str(idx) not in subdirs:
-            results[idx]['answer'] = '분석 중...'
-            results[idx]['advice'] = '분석 중...'
+            result['answer'] = '분석 중...'
+            result['advice'] = '분석 중...'
         else:
             try:
-                results[idx]['answer'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'answer.txt')))
+                result['answer'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'answer.txt')))
             except FileNotFoundError:
-                results[idx]['answer'] = '분석 중...'
+                result['answer'] = '분석 중...'
 
             try:
-                results[idx]['advice'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'advice.txt')))
+                result['advice'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'advice.txt')))
             except FileNotFoundError:
-                results[idx]['advice'] = '분석 중...'
+                result['advice'] = '분석 중...'
 
-    return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=results)
+            # 상태 표시
+            # TODO: 상태 표시 로직 필요
+            result['need_check'] = 0
+            result['is_satisfied'] = False
+
+        results.append(result)
+
+    output_dict['results'] = results
+    output_dict['uid'] = uid
+
+    # 체크리스트 만족 여부 계산
+    # TODO: 체크리스트 만족 여부 계산 로직 필요
+    satisfied_count = 0
+    unsatisfied_count = len(questions) - satisfied_count
+    output_dict['checklist'] = {"satisfied_count": 0, "unsatisfied_count": unsatisfied_count}
+
+    return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=output_dict)
 
 
 # 정관 문서를 받아서 분석을 수행하고, 결과를 json 형태로 반환

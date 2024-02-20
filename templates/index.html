@@ -24,6 +24,25 @@ Law XAI - Demo
         }
     }
 
+    function needcheck2str(need_check) {
+        if (need_check === 0) {
+            return '확인필요';
+        } else if (need_check === 1) {
+            return '주의필요';
+        } else
+        {
+            return '확인불필요';
+        }
+    }
+
+    function isSatisfied2str(is_satisfied) {
+        if (is_satisfied === false) {
+            return '불만족';
+        } else {
+            return '만족';
+        }
+    }
+
     $(document).ready(function () {
         console.log('ready');
 
@@ -107,21 +126,32 @@ Law XAI - Demo
             let data = response.data;
             console.log(data);
 
-            let result = data;
+            let results = data['results']
+            let checklist = data['checklist']
+            let satisfied_count = checklist['satisfied_count']
+            let unsatisfied_count = checklist['unsatisfied_count']
+
+            // set checklist
+            let checklist_elem = $('#checklist');
+            checklist_elem.text(' (Satisfied: ' + satisfied_count + ' / Not satisfied: ' + unsatisfied_count + ')');
+
+
             let tbody = $('#table_result').find('tbody');
             tbody.empty();
 
             // get dictionary result length
-            let result_keys = Object.keys(result);
+            let result_keys = Object.keys(results);
             let result_len = result_keys.length;
 
             for (let i = 0; i < result_len; i++) {
-                let row = result[result_keys[i]];
+                let row = results[result_keys[i]];
                 let tr = $('<tr>');
                 tr.append($('<td>').text(i + 1));
                 tr.append($('<td>').text(row.question));
                 tr.append($('<td>').text(row.answer));
-                tr.append($('<td>').text(row.advice));
+                tr.append($('<td>').text(isSatisfied2str(row.is_satisfied)));
+                tr.append($('<td>').text(needcheck2str(row.need_check)));
+                // tr.append($('<td>').text(row.advice));
                 tbody.append(tr);
             }
         }
@@ -207,14 +237,15 @@ Law XAI - Demo
                 </div>
                 <div class="row">
                     <div class="col">
-                        <h4 class="mt-3">체크리스트 분석</h4>
+                        <h4 class="mt-3">체크리스트 분석<span id="checklist"></span></h4>
                         <table id="table_result" class="table">
                             <thead>
                             <tr>
                                 <th scope="col">번호</th>
                                 <th scope="col">질문</th>
                                 <th scope="col">답변</th>
-                                <th scope="col">변호사 조언</th>
+                                <th scope="col">내용만족여부</th>
+                                <th scope="col">내용검토필요</th>
                             </tr>
                             </thead>
                             <tbody>
