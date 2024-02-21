@@ -38,30 +38,18 @@ sequenceDiagram
 ### 정관 분석 요청
 
 - **URL**: `/analyze`
-
 - **Method**: `POST`
-
-- **Path Parameters**:  
-
-  - - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
-    - `callback_url`: callback을 받고자 하는 URL 주소
-
-- **Response**: 
-
+- **Path Parameters**:
+  - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
+  - `callback_url`: callback을 받고자 하는 URL 주소
+- **Response**:
   - **Type**: `Content-Type: application/json`
-
   - **data**:
-
     - `checklist_questions`: 56개의 qustions을 순서대로 응답
-
     - `doc_paragraphs`: 분할된 문단 리스트
-
     - `mapping_paragraphs`: 각 질문과 매핑된 문단 인덱스
-
     - `document`: parser에 의해 각 장별로 분리된 내용
-
       - 형식 예:
-
         ```json
         [
         	{
@@ -74,9 +62,6 @@ sequenceDiagram
         	}
         ]
         ```
-
-      - 
-
     - `uid`: 생성된 고유값
 
 ### 특정 질문 분석 요청
@@ -86,10 +71,10 @@ sequenceDiagram
 - **URL**: `/analyze`
 - **Method**: `POST`
 - **Path Parameters**:  
-  - - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
-    - `callback_url`: callback을 받고자 하는 URL 주소
-    - `uid`: 이전 요청에서 받은 uid를 넘김
-    - `q_ids`: 콤마로 구분 된 질문의 인덱스(예: 3,4)
+  - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
+  - `callback_url`: callback을 받고자 하는 URL 주소
+  - `uid`: 이전 요청에서 받은 uid를 넘김
+  - `q_ids`: 콤마로 구분 된 질문의 인덱스(예: 3,4)
 - **Response**: 
   - **Type**: `Content-Type: application/json`
   - **data**:
