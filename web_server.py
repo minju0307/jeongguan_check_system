@@ -193,10 +193,14 @@ def analyze():
 
     # 체크리스트 DB 불러오기
     questions_dict = load_json('data/jeongguan_questions_56.json')
-    questions = list(questions_dict.keys())
+    questions_list = list(questions_dict.keys())
+
+    # qustions tuple with id and question
+    questions_tuple = list(enumerate(questions_list))
 
     if q_id_list:
-        questions = [questions[i] for i in q_id_list]
+        questions_list = [questions_list[i] for i in q_id_list]
+        questions_tuple = [questions_tuple[i] for i in q_id_list]
 
     # document 유사도 분석
     # TODO: 유사도 분석 로직 필요
@@ -215,7 +219,7 @@ def analyze():
     sentence_embeddings = sentence_embeddings.cpu().numpy()
 
     # 체크리스트 질문 - 정관 맵핑
-    for idx, q in enumerate(questions):
+    for idx, q in questions_tuple:
         # create empty dir for idx (for callback test)
         os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
 
@@ -225,7 +229,7 @@ def analyze():
 
     app.logger.debug(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
 
-    questions = questions[:3] if DEBUG else questions
+    questions_tuple = questions_tuple[:3] if DEBUG else questions_tuple
     paragraph_results = paragraph_results[:3] if DEBUG else paragraph_results
 
     start_time = time.time()
@@ -233,7 +237,7 @@ def analyze():
     answer_task = f'{CELERY_TASK_NAME}.llm_answer'
     advice_task = f'{CELERY_TASK_NAME}.llm_advice'
 
-    for idx, (q, paragraph_idxs) in enumerate(zip(questions, paragraph_results)):
+    for (idx, q), paragraph_idxs in zip(questions_tuple, paragraph_results):
         # paragraph_idxs to paragraphs
         paragraphs = [input_texts[i] for i in paragraph_idxs]
 
@@ -250,7 +254,7 @@ def analyze():
     app.logger.debug(f"Elapsed Time(Question-Sangbub): {time.time() - start_time:.2f} sec")
 
     outputs["uid"] = uid
-    outputs["checklist_questions"] = questions
+    outputs["checklist_questions"] = questions_list
 
     if input_uid is None:
         outputs["document"] = document
