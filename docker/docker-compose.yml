@@ -13,7 +13,7 @@ services:
     container_name: "${ENVIRONMENT}-xai-law"
     entrypoint: bash /docker-entrypoint.sh
     environment:
-      - TZ="Asia/Seoul"
+      - TZ=Asia/Seoul
     shm_size: 2gb
     expose:
       - "22"

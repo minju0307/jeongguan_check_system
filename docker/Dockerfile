@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:23.02-py3
+FROM nvcr.io/nvidia/pytorch:23.10-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -27,7 +27,7 @@ EXPOSE 22
 #
 # Custom Ubuntu APT Packages
 #
-#RUN apt-get update && apt-get install -y screen htop
+RUN apt-get update && apt-get install -y tzdata
 
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -70,5 +70,4 @@ RUN chmod 777 /root
 
 RUN echo "${USER}:${USER_PW}" | chpasswd
 
-
-#RUN apt-get update && apt-get install -y screen htop
+RUN apt-get update && apt-get install -y screen htop
