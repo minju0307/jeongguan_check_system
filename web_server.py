@@ -24,7 +24,7 @@ from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API
     CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX
 from utils.splitter import JeongguanSplitter
 
-from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json
+from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json, save_to_json
 
 dictConfig({
     'version': 1,
@@ -188,8 +188,15 @@ def analyze():
     # 정관 문단 나누기
     # input_texts = split_document_shorter(input_text)
     splitter = JeongguanSplitter(input_text, verbose=True)
-    input_texts = splitter.get_merged_chapters(single_list=True)
+    merged_chapters = splitter.get_merged_chapters()
     document = splitter.get_document()
+
+    chapter_idx_list = []
+    text_list = []
+    for idx, sub_chapter_list in enumerate(merged_chapters):
+        for j, sub_chapter in enumerate(sub_chapter_list):
+            chapter_idx_list.append(idx)
+            text_list.append(sub_chapter)
 
     # 체크리스트 DB 불러오기
     questions_dict = load_json('data/jeongguan_questions_56.json')
@@ -215,7 +222,7 @@ def analyze():
 
     paragraph_results = []
 
-    sentence_embeddings = semantic_search_model.get_embedding(input_texts)
+    sentence_embeddings = semantic_search_model.get_embedding(text_list)
     sentence_embeddings = sentence_embeddings.cpu().numpy()
 
     # 체크리스트 질문 - 정관 맵핑
@@ -229,17 +236,20 @@ def analyze():
 
     app.logger.debug(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
 
-    questions_tuple = questions_tuple[:3] if DEBUG else questions_tuple
-    paragraph_results = paragraph_results[:3] if DEBUG else paragraph_results
-
     start_time = time.time()
 
     answer_task = f'{CELERY_TASK_NAME}.llm_answer'
     advice_task = f'{CELERY_TASK_NAME}.llm_advice'
 
+    count = 0
     for (idx, q), paragraph_idxs in zip(questions_tuple, paragraph_results):
+        if DEBUG:
+            if count > 2:
+                break
+            count += 1
+
         # paragraph_idxs to paragraphs
-        paragraphs = [input_texts[i] for i in paragraph_idxs]
+        paragraphs = [text_list[i] for i in paragraph_idxs]
 
         sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
 
@@ -258,8 +268,12 @@ def analyze():
 
     if input_uid is None:
         outputs["document"] = document
-        outputs["doc_paragraphs"] = input_texts
+        outputs["doc_paragraphs"] = text_list
         outputs["mapping_paragraphs"] = paragraph_results
+
+    # save outputs to json (for later test)
+    outputs_path = os.path.join('tmp', uid, 'outputs.json')
+    save_to_json(outputs, outputs_path)
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 
@@ -311,27 +325,33 @@ def get_result():
     output_dict = dict()
     results = []
 
+    # read outputs.json
+    outputs_path = os.path.join(dest_dir, 'outputs.json')
+    outputs = load_json(outputs_path)
+    doc_paragraphs = outputs.get('doc_paragraphs')
+    mapping_paragraphs = outputs.get('mapping_paragraphs')
+
     questions_dict = load_json('data/jeongguan_questions_56.json')
     questions = list(questions_dict.keys())
 
     for idx, q in enumerate(questions):
         # check if idx dir exists
-        idx = str(idx)
+        subdir = str(idx)
 
         result = dict()
         result['question'] = q
 
-        if str(idx) not in subdirs:
+        if subdir not in subdirs:
             result['answer'] = '분석 중...'
             result['advice'] = '분석 중...'
         else:
             try:
-                result['answer'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'answer.txt')))
+                result['answer'] = ' '.join(read_file(os.path.join(dest_dir, subdir, 'answer.txt')))
             except FileNotFoundError:
                 result['answer'] = '분석 중...'
 
             try:
-                result['advice'] = ' '.join(read_file(os.path.join(dest_dir, idx, 'advice.txt')))
+                result['advice'] = ' '.join(read_file(os.path.join(dest_dir, subdir, 'advice.txt')))
             except FileNotFoundError:
                 result['advice'] = '분석 중...'
 
@@ -339,6 +359,11 @@ def get_result():
             # TODO: 상태 표시 로직 필요
             result['need_check'] = 0
             result['is_satisfied'] = False
+
+            # 문단 결과 추가
+            result['paragraphs'] = []
+            for paragraph_idx in mapping_paragraphs[idx]:
+                result['paragraphs'].append(doc_paragraphs[paragraph_idx])
 
         results.append(result)
 
