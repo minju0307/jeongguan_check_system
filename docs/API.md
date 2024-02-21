@@ -43,7 +43,7 @@ sequenceDiagram
 
 - **Path Parameters**:  
 
-  - - `file`: 정관 파일(텍스트 형태의 데이터)
+  - - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
     - `callback_url`: callback을 받고자 하는 URL 주소
 
 - **Response**: 
@@ -60,8 +60,9 @@ sequenceDiagram
 
     - `document`: parser에 의해 각 장별로 분리된 내용
 
-      - ```json
-        // 형식 예
+      - 형식 예:
+
+        ```json
         [
         	{
             "title": "제 1장 총 칙",
@@ -70,8 +71,7 @@ sequenceDiagram
         	{
             "title": "제 2장 주식과 주권",
             "content": "제 5조(주식의 총수)..."
-        	},
-          ...
+        	}
         ]
         ```
 
@@ -79,8 +79,22 @@ sequenceDiagram
 
     - `uid`: 생성된 고유값
 
+### 특정 질문 분석 요청
 
+`/analyze`를 이용한 정관 분석 후 일부 네트워크 상황 등으로 인해 callback을 받지 못한 경우 추가로 분석 처리를 위한 API 입니다. 동작 방식은 `/analyze`와 동일하며 요청 시 넘겨야 하는 값이 일부 추가되었습니다.
 
+- **URL**: `/analyze`
+- **Method**: `POST`
+- **Path Parameters**:  
+  - - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
+    - `callback_url`: callback을 받고자 하는 URL 주소
+    - `uid`: 이전 요청에서 받은 uid를 넘김
+    - `q_ids`: 콤마로 구분 된 질문의 인덱스(예: 3,4)
+- **Response**: 
+  - **Type**: `Content-Type: application/json`
+  - **data**:
+    - `checklist_questions`: 요청받은 qustions을 순서대로 응답
+    - `uid`: request 시 넘어온 uid를 그대로 반환
 
 ## Callback 정의
 
