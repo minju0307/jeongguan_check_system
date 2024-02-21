@@ -153,6 +153,12 @@ def analyze():
     mode = request.form.get('mode')
     callback_url = request.form.get('callback_url')
 
+    input_q_ids = request.form.get('q_ids')
+    input_uid = request.form.get('uid')
+
+    # split and to int
+    q_id_list = [int(i) for i in input_q_ids.split(',')] if input_q_ids else None
+
     if mode == 'test':
         input_text = '\n'.join(read_file('input_samples/1.txt')).strip()
     else:
@@ -169,9 +175,11 @@ def analyze():
 
     outputs = dict()
 
-    # generate doc_id with date and random number
-    uid = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
-    outputs["uid"] = uid
+    if input_uid:
+        uid = input_uid
+    else:
+        # generate doc_id with date and random number
+        uid = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
 
     # create empty dir for uid (for callback test)
     os.makedirs(os.path.join('tmp', uid), exist_ok=True)
@@ -183,22 +191,18 @@ def analyze():
     input_texts = splitter.get_merged_chapters(single_list=True)
     document = splitter.get_document()
 
-    outputs["doc_paragraphs"] = input_texts
-    outputs["mapping_paragraphs"] = []
-
     # 체크리스트 DB 불러오기
     questions_dict = load_json('data/jeongguan_questions_56.json')
     questions = list(questions_dict.keys())
 
-    outputs["checklist_questions"] = questions
+    if q_id_list:
+        questions = [questions[i] for i in q_id_list]
 
     # document 유사도 분석
     # TODO: 유사도 분석 로직 필요
     for idx, paragraph_dict in enumerate(document):
         paragraph_dict['score'] = 0.0
         document[idx] = paragraph_dict
-
-    outputs["document"] = document
 
     start_time = time.time()
 
@@ -217,7 +221,6 @@ def analyze():
 
         # 모델을 이용해 체크리스트 질문 - 정관 검색
         paragraph_idxs = semantic_search_model.semantic_search(q, sentence_embeddings, top_k_jeongguan)
-        outputs["mapping_paragraphs"].append(paragraph_idxs)
         paragraph_results.append(paragraph_idxs)
 
     app.logger.debug(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
@@ -245,6 +248,14 @@ def analyze():
         app.logger.debug(f"  Celery Result ID: {result.id}")
 
     app.logger.debug(f"Elapsed Time(Question-Sangbub): {time.time() - start_time:.2f} sec")
+
+    outputs["uid"] = uid
+    outputs["checklist_questions"] = questions
+
+    if input_uid is None:
+        outputs["document"] = document
+        outputs["doc_paragraphs"] = input_texts
+        outputs["mapping_paragraphs"] = paragraph_results
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=outputs)
 

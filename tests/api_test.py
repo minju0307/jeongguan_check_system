@@ -145,13 +145,43 @@ class TestAPI(unittest.TestCase):
         res = response.json()
         result_data = res['data']
 
-
         # validate keys in response
         self.assertIn('checklist_questions', result_data)
         self.assertIn('doc_paragraphs', result_data)
         self.assertIn('document', result_data)
         self.assertIn('mapping_paragraphs', result_data)
         self.assertIn('uid', result_data)
+
+        pprint(res)
+
+    def test_analyze_q_ids(self):
+        url = urljoin(self.url, "analyze")
+        uid = datetime.now().strftime("%Y%m%d%H%M%S") + str(random.randint(1000, 9999))
+
+        data = {
+            'uid': uid,
+            'q_ids': '3,4'
+        }
+
+        test_file = os.path.join(APP_ROOT, 'input_samples/1.txt')
+
+        response = requests.post(url, headers={"Authorization": self.auth_token}, data=data,
+                                 files={'file': open(test_file, 'rb')}, verify=False)
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(200, response.status_code)
+
+        res = response.json()
+        result_data = res['data']
+
+        # validate keys in response
+        self.assertIn('uid', result_data)
+        self.assertIn('checklist_questions', result_data)
+        self.assertNotIn('doc_paragraphs', result_data)
+        self.assertNotIn('document', result_data)
+        self.assertNotIn('mapping_paragraphs', result_data)
 
         pprint(res)
 
