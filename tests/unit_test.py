@@ -67,7 +67,7 @@ class TestUnit(unittest.TestCase):
 
         # merged_chapters (single list)
         print(f'\nprint sub_chapters (single list):')
-        print(splitter.get_merged_chapters(single_list=True))
+        print(splitter.get_merged_chapters())
 
         # print document
         print(f'\nprint document:')
