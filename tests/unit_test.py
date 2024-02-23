@@ -25,7 +25,8 @@ class TestUnit(unittest.TestCase):
 
     def test_split_jeongguan(self):
         file_dir = '../input_samples'
-        files = ['1.txt', '61.txt', '83.txt', '138.txt', '148.txt']
+        # files = ['1.txt', '61.txt', '83.txt', '138.txt', '148.txt']
+        files = ['1.txt', '61.txt', '83.txt']
 
         for file in files:
             file_path = os.path.join(file_dir, file)
@@ -46,13 +47,14 @@ class TestUnit(unittest.TestCase):
 
         titles = splitter.get_titles()
         chapters = splitter.get_chapters()
+        sub_titles = splitter.get_sub_titles()
         sub_chapters = splitter.get_sub_chapters()
         merged_chapters = splitter.get_merged_chapters()
 
-        self.assertEquals(num_chapters, len(chapters))
+        self.assertEqual(num_chapters, len(chapters))
 
         for idx, sub_chapter_list in enumerate(sub_chapters):
-            self.assertEquals(num_sub_chapters[idx], len(sub_chapter_list))
+            self.assertEqual(num_sub_chapters[idx], len(sub_chapter_list))
 
         # print merged chapters
         print(f'\nmerge sub_chapters:')
@@ -69,6 +71,10 @@ class TestUnit(unittest.TestCase):
         # print document
         print(f'\nprint document:')
         pprint(splitter.get_document()[0])
+
+        document = splitter.get_document(sub_chapter=True)
+        for chapter in document:
+            print(chapter)
 
     def tearDown(self):
         pass

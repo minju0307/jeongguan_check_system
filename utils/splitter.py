@@ -31,7 +31,9 @@ def split_content(content, chapter_pattern, include_title=True, verbose=False):
     for idx, (start, end) in enumerate(chapter_idxs):
         chapter_title = content[start:end].strip()
         title_list.append(chapter_title)
-        print(f'chapter {idx + 1}: {chapter_title}')
+
+        if verbose:
+            print(f'chapter {idx + 1}: {chapter_title}')
 
     prev_idx = 0
 
@@ -89,8 +91,9 @@ def split_content(content, chapter_pattern, include_title=True, verbose=False):
     assert len(new_title_list) == len(new_content_list)
 
     # print chapter title
-    for idx, title in enumerate(new_title_list):
-        print(f'filtered {idx + 1}: {title}')
+    if verbose:
+        for idx, title in enumerate(new_title_list):
+            print(f'filtered {idx + 1}: {title}')
 
     return new_title_list, new_content_list
 
@@ -98,6 +101,7 @@ def split_content(content, chapter_pattern, include_title=True, verbose=False):
 class JeongguanSplitter(ABC):
     titles = []
     chapters = []
+    sub_titles = []
     sub_chapters = []
 
     def __init__(self, content, merge_len=1200, verbose=False):
@@ -105,13 +109,13 @@ class JeongguanSplitter(ABC):
         self.verbose = verbose
 
         chapter_pattern = r'((\n)제[ ]{0,}\d+[ ]{0,}장.+)'
-        sub_chapter_pattern = r'(\n|^)제[ ]{0,}\d{,2}[ ]{0,}조([의]?[ ]{0,}\d{,2})'
+        sub_chapter_pattern = r'((\n|^)제[ ]{0,}\d{,2}[ ]{0,}조[의]?[ ]{0,}\d{,2}[ ]{0,})\(([^\)]+)\)'
 
         space_pattern = r'[ ]{2,}'
         self.content = re.sub(space_pattern, ' ', content)
 
         self.split_chapters(chapter_pattern)
-        self.sub_chapters = self.split_sub_chapters(sub_chapter_pattern)
+        self.sub_titles, self.sub_chapters = self.split_sub_chapters(sub_chapter_pattern)
 
         self.merged_chapters = self.merge_sub_chapters(self.sub_chapters)
 
@@ -130,16 +134,22 @@ class JeongguanSplitter(ABC):
                 titles.pop(idx)
                 chapters.pop(idx)
 
+        assert len(titles) == len(chapters)
+
         self.titles = titles
         self.chapters = chapters
 
     def split_sub_chapters(self, sub_chapter_pattern):
+        sub_titles = []
         sub_chapters = []
         for chapter in self.chapters:
-            _, splitted_list = split_content(chapter, sub_chapter_pattern, verbose=self.verbose)
+            title_list, splitted_list = split_content(chapter, sub_chapter_pattern, verbose=self.verbose)
+            sub_titles.append(title_list)
             sub_chapters.append(splitted_list)
 
-        return sub_chapters
+            assert len(title_list) == len(splitted_list)
+
+        return sub_titles, sub_chapters
 
     def merge_sub_chapters(self, sub_chapters):
         # merge sub_chapters to around merge_len
@@ -169,17 +179,25 @@ class JeongguanSplitter(ABC):
     def get_chapters(self):
         return self.chapters
 
+    def get_sub_titles(self):
+        return self.sub_titles
+
     def get_sub_chapters(self):
         return self.sub_chapters
 
     def get_merged_chapters(self):
         return self.merged_chapters
 
-    def get_document(self):
+    def get_document(self, sub_chapter=False):
         document = []
-        for title, chapter in zip(self.titles, self.chapters):
-            chapter_info = {'title': title, 'content': chapter}
-            document.append(chapter_info)
+        if sub_chapter:
+            for title, chapter in zip(self.titles, self.sub_chapters):
+                chapter_info = {'title': title, 'content': chapter}
+                document.append(chapter_info)
+        else:
+            for title, chapter in zip(self.titles, self.chapters):
+                chapter_info = {'title': title, 'content': chapter}
+                document.append(chapter_info)
 
         return document
 
