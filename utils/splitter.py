@@ -1,4 +1,7 @@
 import re
+from abc import abstractmethod, ABC
+
+from utils.utils import read_file
 
 
 def filter_text(text):
@@ -92,7 +95,7 @@ def split_content(content, chapter_pattern, include_title=True, verbose=False):
     return new_title_list, new_content_list
 
 
-class JeongguanSplitter:
+class JeongguanSplitter(ABC):
     titles = []
     chapters = []
     sub_chapters = []
@@ -111,6 +114,10 @@ class JeongguanSplitter:
         self.sub_chapters = self.split_sub_chapters(sub_chapter_pattern)
 
         self.merged_chapters = self.merge_sub_chapters(self.sub_chapters)
+
+    @abstractmethod
+    def read_file(self, file_path):
+        pass
 
     def split_chapters(self, chapter_pattern):
         titles, chapters = split_content(self.content, chapter_pattern, include_title=False, verbose=self.verbose)
@@ -166,7 +173,7 @@ class JeongguanSplitter:
         return self.sub_chapters
 
     def get_merged_chapters(self):
-            return self.merged_chapters
+        return self.merged_chapters
 
     def get_document(self):
         document = []
@@ -175,3 +182,13 @@ class JeongguanSplitter:
             document.append(chapter_info)
 
         return document
+
+
+class JeongguanSplitterText(JeongguanSplitter):
+    def __init__(self, file_path, merge_len=1200, verbose=False):
+        content = self.read_file(file_path)
+        super().__init__(content, merge_len, verbose)
+
+    def read_file(self, file_path):
+        input_lines = read_file(file_path)
+        return '\n'.join(input_lines).strip()

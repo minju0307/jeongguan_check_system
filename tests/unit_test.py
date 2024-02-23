@@ -3,7 +3,7 @@ import unittest
 from pprint import pprint
 
 from main import split_document_shorter
-from utils.splitter import filter_text, JeongguanSplitter
+from utils.splitter import filter_text, JeongguanSplitterText
 from utils.utils import read_file, load_json
 
 
@@ -35,7 +35,6 @@ class TestUnit(unittest.TestCase):
     def split_jeongguan(self, file_path):
 
         file = os.path.basename(file_path)
-        input_lines = read_file(file_path)
 
         label_dict = load_json('../input_samples/label.json')
         label_info = label_dict[file]
@@ -43,9 +42,7 @@ class TestUnit(unittest.TestCase):
         num_chapters = label_info['num_chapters']
         num_sub_chapters = label_info['num_sub_chapters']
 
-        content = '\n'.join(input_lines).strip()
-
-        splitter = JeongguanSplitter(content, verbose=True)
+        splitter = JeongguanSplitterText(file_path, verbose=True)
 
         titles = splitter.get_titles()
         chapters = splitter.get_chapters()

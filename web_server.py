@@ -22,7 +22,7 @@ from inference_reference import RetrievalSearch
 from main import main
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
     CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX
-from utils.splitter import JeongguanSplitter
+from utils.splitter import JeongguanSplitterText
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json, save_to_json
 
@@ -160,15 +160,13 @@ def analyze():
     q_id_list = [int(i) for i in input_q_ids.split(',')] if input_q_ids else None
 
     if mode == 'test':
-        input_text = '\n'.join(read_file('input_samples/1.txt')).strip()
+        file_path = 'input_samples/1.txt'
     else:
         results = save_file_from_request(request, folder='jeongguan')
         if type(results) == ErrorElement:
             return json_response_element(results)
         else:
             file_path, file_url = results['file']
-
-        input_text = '\n'.join(read_file(file_path)).strip()
 
     if callback_url is None:
         callback_url = DEFAULT_CALLBACK_URL
@@ -187,7 +185,8 @@ def analyze():
     # 체크리스트 -> 문단 서치
     # 정관 문단 나누기
     # input_texts = split_document_shorter(input_text)
-    splitter = JeongguanSplitter(input_text, verbose=True)
+
+    splitter = JeongguanSplitterText(file_path, verbose=True)
     merged_chapters = splitter.get_merged_chapters()
     document = splitter.get_document()
 
