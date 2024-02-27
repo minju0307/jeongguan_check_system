@@ -80,10 +80,18 @@ Law XAI - Demo
                 // create content
                 let content = $('#list-content');
 
+                // 장 제목 출력
                 let content_title = $('<h4>').attr('id', 'list-item-' + i).text(paragraph["title"] + ' (Score: ' + score + ')' );
-                let content_paragraph = $('<p>').attr('class', 'p-3').html(nl2br(paragraph["content"]));
                 content.append(content_title);
-                content.append(content_paragraph);
+
+                // 조 내용 출력
+                let sub_chapters = paragraph["content"]
+
+                for (let j = 0; j < sub_chapters.length; j++) {
+                    let sub_paragraph = sub_chapters[j];
+                    let sub_content_paragraph = $('<p>').attr('class', 'p-3').html(nl2br(sub_paragraph["content"]));
+                    content.append(sub_content_paragraph);
+                }
             }
             // refresh non-visible scrollspy
             $('[data-bs-spy="scroll"]').each(function () {

@@ -188,7 +188,7 @@ def analyze():
 
     splitter = JeongguanSplitterText(file_path, verbose=True)
     merged_chapters = splitter.get_merged_chapters()
-    document = splitter.get_document()
+    document = splitter.get_document(sub_chapter=True)
 
     chapter_idx_list = []
     text_list = []

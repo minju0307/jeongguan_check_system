@@ -191,8 +191,13 @@ class JeongguanSplitter(ABC):
     def get_document(self, sub_chapter=False):
         document = []
         if sub_chapter:
-            for title, chapter in zip(self.titles, self.sub_chapters):
-                chapter_info = {'title': title, 'content': chapter}
+            for title, sub_title, chapter in zip(self.titles, self.sub_titles, self.sub_chapters):
+                sub_document = []
+                for sub_title, sub_chapter in zip(sub_title, chapter):
+                    sub_chapter_info = {'title': sub_title, 'content': sub_chapter}
+                    sub_document.append(sub_chapter_info)
+
+                chapter_info = {'title': title, 'content': sub_document}
                 document.append(chapter_info)
         else:
             for title, chapter in zip(self.titles, self.chapters):
