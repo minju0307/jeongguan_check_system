@@ -1,6 +1,8 @@
 import re
 from abc import abstractmethod, ABC
 
+import numpy as np
+
 from utils.utils import read_file
 
 
@@ -105,6 +107,7 @@ class JeongguanSplitter(ABC):
     sub_chapters = []
 
     def __init__(self, content, merge_len=1200, verbose=False):
+        self.sub_scores = None
         self.merge_len = merge_len
         self.verbose = verbose
 
@@ -191,13 +194,16 @@ class JeongguanSplitter(ABC):
     def get_document(self, sub_chapter=False):
         document = []
         if sub_chapter:
-            for title, sub_title, chapter in zip(self.titles, self.sub_titles, self.sub_chapters):
+            for i, (title, sub_title, chapter) in enumerate(zip(self.titles, self.sub_titles, self.sub_chapters)):
                 sub_document = []
-                for sub_title, sub_chapter in zip(sub_title, chapter):
+                for j, (sub_title, sub_chapter) in enumerate(zip(sub_title, chapter)):
                     sub_chapter_info = {'title': sub_title, 'content': sub_chapter}
+                    if self.sub_scores:
+                        sub_chapter_info['score'] = self.sub_scores[i][j]
                     sub_document.append(sub_chapter_info)
 
-                chapter_info = {'title': title, 'content': sub_document}
+                score = np.mean(self.sub_scores[i]) if self.sub_scores else 0
+                chapter_info = {'title': title, 'content': sub_document, 'score': score}
                 document.append(chapter_info)
         else:
             for title, chapter in zip(self.titles, self.chapters):
@@ -205,6 +211,9 @@ class JeongguanSplitter(ABC):
                 document.append(chapter_info)
 
         return document
+
+    def update_scores(self, sub_scores):
+        self.sub_scores = sub_scores
 
 
 class JeongguanSplitterText(JeongguanSplitter):

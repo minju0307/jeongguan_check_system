@@ -4,14 +4,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from config import MULTILABEL_MODEL_PATH, APP_ROOT
 from inference_paragraph import SemanticSearch
-from utils.splitter import JeongguanSplitterText
+from utils.splitter import JeongguanSplitterText, JeongguanSplitter
 from utils.utils import load_json
 
 reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json'))
 
 
-class DocumentSimilarity:
-    def __init__(self, semantic_search_model: SemanticSearch, sub_titles, sub_chapters, ref_doc: list, verbose=False):
+class JeongguanSimilarity:
+    def __init__(self, semantic_search_model: SemanticSearch, splitter: JeongguanSplitter, ref_doc: list,
+                 verbose=False):
+        sub_titles = splitter.get_sub_titles()
+        sub_chapters = splitter.get_sub_chapters()
+
         # get mapped idx and single list from sub_chapters
         sub_chapters_list = []
         sub_chapters_idx = []
@@ -123,12 +127,7 @@ class DocumentSimilarity:
                 print(f'final_idx: {final_idx}')
                 print(f'reference: {reference_titles[final_idx]}')
 
-            sub_chapter_dict = {
-                'title': sub_title,
-                'content': sub_chapters_list[sub_titles.index(sub_title)],
-                'score': final_score
-            }
-            processed_list.append(sub_chapter_dict)
+            processed_list.append(final_score)
 
         if verbose:
             print(f'\nwarning_list: (count: {len(warning_list)})')
@@ -155,13 +154,13 @@ def main():
     file_path = os.path.join(APP_ROOT, 'input_samples/1.txt')
 
     splitter = JeongguanSplitterText(file_path, verbose=False)
-    sub_titles = splitter.get_sub_titles()
-    sub_chapters = splitter.get_sub_chapters()
 
-    doc_sim = DocumentSimilarity(semantic_search_model, sub_titles=sub_titles, sub_chapters=sub_chapters,
-                                 ref_doc=reference_doc)
+    doc_sim = JeongguanSimilarity(semantic_search_model, splitter=splitter, ref_doc=reference_doc)
+    sub_scores = doc_sim.get_result()
+    print(sub_scores)
 
-    print(doc_sim.get_result())
+    splitter.update_scores(sub_scores)
+    print(splitter.get_document(sub_chapter=True))
 
 
 if __name__ == "__main__":
