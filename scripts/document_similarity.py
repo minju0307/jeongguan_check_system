@@ -11,16 +11,17 @@ reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json')
 
 
 class DocumentSimilarity:
-    def __init__(self, semantic_search_model: SemanticSearch, reference_doc: list, file_path: str):
-        self.splitter = JeongguanSplitterText(file_path, verbose=False)
-        self.semantic_search_model = semantic_search_model
+    def __init__(self, semantic_search_model: SemanticSearch, sub_titles, sub_chapters, ref_doc: list, verbose=False):
+        # get mapped idx and single list from sub_chapters
+        sub_chapters_list = []
+        sub_chapters_idx = []
+        for idx, sub_chapter_elems in enumerate(sub_chapters):
+            for sub_chapter in sub_chapter_elems:
+                sub_chapters_list.append(sub_chapter)
+                sub_chapters_idx.append(idx)
 
-        sub_titles = self.splitter.get_sub_titles()
-        sub_chapters = self.splitter.get_sub_chapters()
-
-        # sub_chapters to single list
         sub_titles = [title for title_list in sub_titles for title in title_list]
-        sub_chapters = [sub_chapter for sub_chapter_list in sub_chapters for sub_chapter in sub_chapter_list]
+        # sub_chapters = [sub_chapter for sub_chapter_list in sub_chapters for sub_chapter in sub_chapter_list]
 
         # sub_titles: remove parentheses
         new_sub_titles = []
@@ -38,7 +39,7 @@ class DocumentSimilarity:
 
         # get reference titles in reference_doc
         reference_titles = []
-        for ref_chapter in reference_doc:
+        for ref_chapter in ref_doc:
             for ref_sub_chapter in ref_chapter:
                 reference_titles.append(ref_sub_chapter['title'])
 
@@ -50,11 +51,11 @@ class DocumentSimilarity:
         #
         # 내용 처리
         #
-        input_embeddings = semantic_search_model.get_embedding(sub_chapters)
+        input_embeddings = semantic_search_model.get_embedding(sub_chapters_list)
         input_embeddings = input_embeddings.cpu().numpy()
 
         reference_contents = []
-        for ref_chapter in reference_doc:
+        for ref_chapter in ref_doc:
             for ref_sub_chapter in ref_chapter:
                 reference_contents.append(ref_sub_chapter['content'])
 
@@ -64,7 +65,7 @@ class DocumentSimilarity:
         content_similarities = cosine_similarity(input_embeddings, ref_embeddings)
 
         warning_list = []
-        document_list = []
+        processed_list = []
 
         for sub_title, title_similarity, content_similarity in zip(sub_titles, title_similarities,
                                                                    content_similarities):
@@ -73,15 +74,16 @@ class DocumentSimilarity:
             title_score = title_similarity[top_title_idx]
             content_score = content_similarity[top_title_idx]
 
-            print(f'\nsub_title: {sub_title}')
-            print(f'similarity: {title_similarity[top_title_idx]}')
-            print(f'reference: {reference_titles[top_title_idx]}')
-
             top_content_idx = content_similarity.argmax()
             top_content_score = content_similarity[top_content_idx]
 
-            print(f'similarity top content_idx({top_content_idx}): {top_content_score}')
-            print(f'similarity top title_idx({top_title_idx}): {content_score}')
+            if verbose:
+                print(f'\nsub_title: {sub_title}')
+                print(f'similarity: {title_similarity[top_title_idx]}')
+                print(f'reference: {reference_titles[top_title_idx]}')
+
+                print(f'similarity top content_idx({top_content_idx}): {top_content_score}')
+                print(f'similarity top title_idx({top_title_idx}): {content_score}')
 
             final_score = 0
             final_idx = -1
@@ -115,22 +117,33 @@ class DocumentSimilarity:
                             (sub_title, reference_titles[top_title_idx], title_score, content_score, top_content_score))
 
             final_score = min(1.0, final_score)
-            print(f'final_score: {final_score}')
-            print(f'final_idx: {final_idx}')
-            print(f'reference: {reference_titles[final_idx]}')
+
+            if verbose:
+                print(f'final_score: {final_score}')
+                print(f'final_idx: {final_idx}')
+                print(f'reference: {reference_titles[final_idx]}')
 
             sub_chapter_dict = {
                 'title': sub_title,
-                'content': sub_chapters[sub_titles.index(sub_title)],
+                'content': sub_chapters_list[sub_titles.index(sub_title)],
                 'score': final_score
             }
-            document_list.append(sub_chapter_dict)
+            processed_list.append(sub_chapter_dict)
 
-        print(f'\nwarning_list: (count: {len(warning_list)})')
-        for warning in warning_list:
-            print(warning)
+        if verbose:
+            print(f'\nwarning_list: (count: {len(warning_list)})')
+            for warning in warning_list:
+                print(warning)
 
-        self.document_list = document_list
+        # get original structure using processed list by idx
+        output_list = []
+        for idx, sub_chapter_dict in zip(sub_chapters_idx, processed_list):
+            if len(output_list) <= idx:
+                output_list.append([])
+
+            output_list[idx].append(sub_chapter_dict)
+
+        self.document_list = output_list
 
     def get_result(self):
         return self.document_list
@@ -141,9 +154,14 @@ def main():
 
     file_path = os.path.join(APP_ROOT, 'input_samples/1.txt')
 
-    splitter = DocumentSimilarity(semantic_search_model, reference_doc, file_path)
+    splitter = JeongguanSplitterText(file_path, verbose=False)
+    sub_titles = splitter.get_sub_titles()
+    sub_chapters = splitter.get_sub_chapters()
 
-    print(splitter.get_result())
+    doc_sim = DocumentSimilarity(semantic_search_model, sub_titles=sub_titles, sub_chapters=sub_chapters,
+                                 ref_doc=reference_doc)
+
+    print(doc_sim.get_result())
 
 
 if __name__ == "__main__":
