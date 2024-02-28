@@ -7,8 +7,6 @@ from inference_paragraph import SemanticSearch
 from utils.splitter import JeongguanSplitterText, JeongguanSplitter
 from utils.utils import load_json
 
-reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json'))
-
 
 class JeongguanSimilarity:
     def __init__(self, semantic_search_model: SemanticSearch, splitter: JeongguanSplitter, ref_doc: list,
@@ -149,6 +147,8 @@ class JeongguanSimilarity:
 
 
 def main():
+    reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json'))
+
     semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
 
     file_path = os.path.join(APP_ROOT, 'input_samples/1.txt')
@@ -159,7 +159,7 @@ def main():
     sub_scores = doc_sim.get_result()
     print(sub_scores)
 
-    splitter.update_scores(sub_scores)
+    splitter.set_scores(sub_scores)
     print(splitter.get_document(sub_chapter=True))
 
 

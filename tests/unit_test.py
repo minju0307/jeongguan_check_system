@@ -2,7 +2,12 @@ import os
 import unittest
 from pprint import pprint
 
+import numpy as np
+
+from config import MULTILABEL_MODEL_PATH, APP_ROOT
+from inference_paragraph import SemanticSearch
 from main import split_document_shorter
+from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import filter_text, JeongguanSplitterText
 from utils.utils import read_file, load_json
 
@@ -75,6 +80,25 @@ class TestUnit(unittest.TestCase):
         document = splitter.get_document(sub_chapter=True)
         for chapter in document:
             print(chapter)
+
+    def test_document_similarity(self):
+        reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json'))
+
+        semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
+
+        file_path = os.path.join(APP_ROOT, 'input_samples/1.txt')
+
+        splitter = JeongguanSplitterText(file_path, verbose=False)
+
+        doc_sim = JeongguanSimilarity(semantic_search_model, splitter=splitter, ref_doc=reference_doc)
+        sub_scores = doc_sim.get_result()
+        print(sub_scores)
+
+        splitter.set_scores(sub_scores)
+        document = splitter.get_document(sub_chapter=True)
+
+        for i, sub_score in enumerate(sub_scores):
+            self.assertEqual(np.mean(sub_score), document[i]['score'])
 
     def tearDown(self):
         pass

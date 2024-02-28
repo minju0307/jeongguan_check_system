@@ -212,7 +212,7 @@ class JeongguanSplitter(ABC):
 
         return document
 
-    def update_scores(self, sub_scores):
+    def set_scores(self, sub_scores):
         self.sub_scores = sub_scores
 
 
