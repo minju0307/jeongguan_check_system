@@ -22,6 +22,7 @@ from inference_reference import RetrievalSearch
 from main import main
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
     CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX
+from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import JeongguanSplitterText
 
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json, save_to_json
@@ -188,6 +189,14 @@ def analyze():
 
     splitter = JeongguanSplitterText(file_path, verbose=True)
     merged_chapters = splitter.get_merged_chapters()
+
+    # document 유사도 분석
+    reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json'))
+    doc_sim = JeongguanSimilarity(semantic_search_model, splitter=splitter, ref_doc=reference_doc)
+    sub_scores = doc_sim.get_result()
+    splitter.set_scores(sub_scores)
+    print(sub_scores)
+
     document = splitter.get_document(sub_chapter=True)
 
     chapter_idx_list = []
@@ -207,12 +216,6 @@ def analyze():
     if q_id_list:
         questions_list = [questions_list[i] for i in q_id_list]
         questions_tuple = [questions_tuple[i] for i in q_id_list]
-
-    # document 유사도 분석
-    # TODO: 유사도 분석 로직 필요
-    for idx, paragraph_dict in enumerate(document):
-        paragraph_dict['score'] = 0.0
-        document[idx] = paragraph_dict
 
     start_time = time.time()
 

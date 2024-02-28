@@ -98,7 +98,9 @@ class TestUnit(unittest.TestCase):
         document = splitter.get_document(sub_chapter=True)
 
         for i, sub_score in enumerate(sub_scores):
-            self.assertEqual(np.mean(sub_score), document[i]['score'])
+            self.assertEqual(round(np.mean(sub_score), 3), round(document[i]['score'], 3))
+
+        print(document)
 
     def tearDown(self):
         pass

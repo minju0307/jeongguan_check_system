@@ -118,7 +118,8 @@ class JeongguanSimilarity:
                         warning_list.append(
                             (sub_title, reference_titles[top_title_idx], title_score, content_score, top_content_score))
 
-            final_score = min(1.0, final_score)
+            final_score = float(final_score)  # float32 to float16
+            final_score = min(1.0, round(final_score, 3))
 
             if verbose:
                 print(f'final_score: {final_score}')

@@ -203,6 +203,8 @@ class JeongguanSplitter(ABC):
                     sub_document.append(sub_chapter_info)
 
                 score = np.mean(self.sub_scores[i]) if self.sub_scores else 0
+                score = round(score, 3)
+
                 chapter_info = {'title': title, 'content': sub_document, 'score': score}
                 document.append(chapter_info)
         else:
