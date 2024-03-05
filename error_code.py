@@ -19,6 +19,8 @@ class ErrorCode():
 
     NOT_EXIST_UID = ErrorElement(150, 'uid does not exist')
 
+    INVALID_DOCUMENT = ErrorElement(160, 'Invalid document')
+
     SUCCESS = ErrorElement(200, 'Success')
     TIMEOUT = ErrorElement(300, 'Timeout')
 

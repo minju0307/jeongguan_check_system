@@ -187,7 +187,11 @@ def analyze():
     # 정관 문단 나누기
     # input_texts = split_document_shorter(input_text)
 
-    splitter = JeongguanSplitterText(file_path, verbose=True)
+    try:
+        splitter = JeongguanSplitterText(file_path, verbose=True)
+    except AssertionError:
+        return json_response(msg=ErrorCode.INVALID_DOCUMENT.msg, code=ErrorCode.INVALID_DOCUMENT.code)
+
     merged_chapters = splitter.get_merged_chapters()
 
     # document 유사도 분석
