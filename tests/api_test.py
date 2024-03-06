@@ -11,9 +11,10 @@ import requests
 
 from config import APP_ROOT, SERVICE_URL
 from error_code import ErrorCode
+from tests.base import BaseTest
 
 
-class TestAPI(unittest.TestCase):
+class TestAPI(unittest.TestCase, BaseTest):
     def setUp(self):
         self.url = SERVICE_URL
         self.auth_token = "kimandhong"
@@ -128,14 +129,12 @@ class TestAPI(unittest.TestCase):
         res = response.json()
         pprint(res)
 
-    def test_analyze(self):
-        url = urljoin(self.url, "analyze")
-
-        data = {}
-        test_file = os.path.join(APP_ROOT, 'input_samples/1.txt')
-
-        response = requests.post(url, headers={"Authorization": self.auth_token}, data=data,
-                                 files={'file': open(test_file, 'rb')}, verify=False)
+    def request_api(self, url, data, files=None):
+        if files:
+            response = requests.post(url, headers={"Authorization": self.auth_token}, data=data, files=files,
+                                     verify=False)
+        else:
+            response = requests.post(url, headers={"Authorization": self.auth_token}, json=data, verify=False)
 
         # 200 OK
         if response.status_code != 200:
@@ -143,7 +142,30 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(200, response.status_code)
 
         res = response.json()
+        return res
+
+    def test_analyze(self):
+        url = urljoin(self.url, "analyze")
+
+        data = {}
+
+        # Invalid document
+        test_file = os.path.join(APP_ROOT, 'input_samples/65e6964faef64e7ba7e76bae.txt')
+
+        res = self.request_api(url, data, files={'file': open(test_file, 'rb')})
+        result_code = res['code']
+
+        self.assertEqual(ErrorCode.INVALID_DOCUMENT.code, result_code)
+
+        # Valid document
+        test_file = os.path.join(APP_ROOT, 'input_samples/1.txt')
+
+        res = self.request_api(url, data, files={'file': open(test_file, 'rb')})
+        result_code = res['code']
+        self.assertEqual(ErrorCode.SUCCESS.code, result_code)
+
         result_data = res['data']
+        self.logger.debug(f'result_data: {result_data}')
 
         # validate keys in response
         self.assertIn('checklist_questions', result_data)
@@ -151,8 +173,6 @@ class TestAPI(unittest.TestCase):
         self.assertIn('document', result_data)
         self.assertIn('mapping_paragraphs', result_data)
         self.assertIn('uid', result_data)
-
-        pprint(res)
 
     def test_analyze_q_ids(self):
         url = urljoin(self.url, "analyze")

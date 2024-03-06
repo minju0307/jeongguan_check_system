@@ -1,3 +1,4 @@
+import logging
 import os
 import unittest
 from pprint import pprint
@@ -7,12 +8,13 @@ import numpy as np
 from config import MULTILABEL_MODEL_PATH, APP_ROOT
 from inference_paragraph import SemanticSearch
 from main import split_document_shorter
+from tests.base import BaseTest
 from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import filter_text, JeongguanSplitterText
 from utils.utils import read_file, load_json
 
 
-class TestUnit(unittest.TestCase):
+class TestUnit(unittest.TestCase, BaseTest):
     def setUp(self):
         pass
 
@@ -32,11 +34,28 @@ class TestUnit(unittest.TestCase):
         file_dir = '../input_samples'
         # files = ['1.txt', '61.txt', '83.txt', '138.txt', '148.txt']
         files = ['1.txt', '61.txt', '83.txt']
+        abnormal_files = ['65e6964faef64e7ba7e76bae.txt']
+        # files = ['1.txt']
+
+        for file in abnormal_files:
+            file_path = os.path.join(file_dir, file)
+            print(f'file: {file}')
+
+            is_error = False
+            try:
+                self.split_jeongguan(file_path)
+            except AssertionError:
+                self.logger.error(f'AssertionError: {file}')
+                is_error = True
+            finally:
+                self.assertTrue(is_error)
 
         for file in files:
             file_path = os.path.join(file_dir, file)
             print(f'file: {file}')
+
             self.split_jeongguan(file_path)
+            self.logger.debug(f'file: {file} is done')
 
     def split_jeongguan(self, file_path):
 
