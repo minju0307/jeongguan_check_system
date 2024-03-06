@@ -99,3 +99,18 @@ callback은 각 질문마다 두 차례로 나뉘어서 응답이 됩니다.
 - 첫 번째 응답: `uid`, `idx`, `answer` 를 응답
 - 첫 번째 응답: `uid`, `idx`, `advice` 를 응답
 
+
+
+## 응답코드
+
+| 코드번호 | 이름                       | 의미                                               |
+| -------- | -------------------------- | -------------------------------------------------- |
+| 100      | UNKNOWN_ERROR              | 에러의 종류를 특정하기 어려울 때 출력              |
+| 101      | NO_SERVER_RESPONSE         | 내부 추론서버가 응답을 하지 않을 경우              |
+| 102      | INVALID_PARAMETER          | GET/POST에서 값을 넘기지 않거나 적절하지 않은 경우 |
+| 160      | INVALID_DOCUMENT           | document의 형식이 부적절한 경우                    |
+| 200      | SUCCESS                    | 성공                                               |
+| 300      | TIMEOUT                    | 타임아웃                                           |
+| 500      | NO_FILE_PART               | 파일 업로드 시 file 관련 필드가 없는 경우          |
+| 501      | NO_SELECTED_FILE           | 파일 업로드 시 선택한 파일이 없는 경우             |
+| 502      | NOT_ALLOWED_FILE_EXTENSION | 파일 업로드 시 지원되지 않는 확장자인 경우         |
