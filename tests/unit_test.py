@@ -33,7 +33,7 @@ class TestUnit(unittest.TestCase, BaseTest):
     def test_split_jeongguan(self):
         file_dir = '../input_samples'
         # files = ['1.txt', '61.txt', '83.txt', '138.txt', '148.txt']
-        files = ['1.txt', '61.txt', '83.txt']
+        normal_files = ['1.txt', '61.txt', '83.txt']
         abnormal_files = ['65e6964faef64e7ba7e76bae.txt']
         # files = ['1.txt']
 
@@ -50,7 +50,7 @@ class TestUnit(unittest.TestCase, BaseTest):
             finally:
                 self.assertTrue(is_error)
 
-        for file in files:
+        for file in normal_files:
             file_path = os.path.join(file_dir, file)
             print(f'file: {file}')
 

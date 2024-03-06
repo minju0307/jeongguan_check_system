@@ -38,16 +38,23 @@ sequenceDiagram
 ### 정관 분석 요청
 
 - **URL**: `/analyze`
+
 - **Method**: `POST`
+
 - **Path Parameters**:
   - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
   - `callback_url`: callback을 받고자 하는 URL 주소
+  
 - **Response**:
   - **Type**: `Content-Type: application/json`
+  
   - **data**:
     - `checklist_questions`: 56개의 qustions을 순서대로 응답
+    
     - `doc_paragraphs`: 분할된 문단 리스트
+    
     - `mapping_paragraphs`: 각 질문과 매핑된 문단 인덱스
+    
     - `document`: parser에 의해 각 장별로 분리된 내용
       - 형식 예:
         ```json
@@ -62,7 +69,18 @@ sequenceDiagram
         	}
         ]
         ```
+      
     - `uid`: 생성된 고유값
+
+#### 상태 코드
+
+| 코드번호 | 이름                       | 의미                                       |
+| -------- | -------------------------- | ------------------------------------------ |
+| 160      | INVALID_DOCUMENT           | document의 형식이 부적절한 경우            |
+| 200      | SUCCESS                    | 성공                                       |
+| 500      | NO_FILE_PART               | 파일 업로드 시 file 관련 필드가 없는 경우  |
+| 501      | NO_SELECTED_FILE           | 파일 업로드 시 선택한 파일이 없는 경우     |
+| 502      | NOT_ALLOWED_FILE_EXTENSION | 파일 업로드 시 지원되지 않는 확장자인 경우 |
 
 ### 특정 질문 분석 요청
 
@@ -101,7 +119,7 @@ callback은 각 질문마다 두 차례로 나뉘어서 응답이 됩니다.
 
 
 
-## 응답코드
+## 공통 상태 코드
 
 | 코드번호 | 이름                       | 의미                                               |
 | -------- | -------------------------- | -------------------------------------------------- |
