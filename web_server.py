@@ -21,7 +21,8 @@ from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
 from main import main
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
-    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX
+    CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX, \
+    TEST_MODE
 from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import JeongguanSplitterText
 
@@ -249,7 +250,7 @@ def analyze():
 
     count = 0
     for (idx, q), paragraph_idxs in zip(questions_tuple, paragraph_results):
-        if DEBUG:
+        if TEST_MODE:
             if count > 2:
                 break
             count += 1
