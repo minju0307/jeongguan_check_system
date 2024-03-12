@@ -16,7 +16,7 @@ class TestCelery(unittest.TestCase):
         idx = 0
         callback_url = DEFAULT_CALLBACK_URL
 
-        # create a directory for the uid
+        # create a directory for the uid (callback에서 directory가 있는지 체크)
         uid_path = os.path.join(APP_ROOT, 'tmp', uid)
         rmtree(uid_path, ignore_errors=True)
         os.makedirs(uid_path)
