@@ -1,6 +1,11 @@
 import os
 import json
+import traceback
+
 import openai
+
+from config import DEBUG
+from utils.utils import print_exception
 
 
 def prompt_generator(question, answer, retrieval_results):
@@ -59,8 +64,8 @@ def generate_gpt(gpt_ver, query):
         {"role": "system", "content": "you are a professional lawyer."},
         {"role": "user", "content": query},
     ]
-    response = openai.ChatCompletion.create(model=gpt_ver, messages=messages)
-    res = response["choices"][0]["message"]["content"]
+    completion = openai.chat.completions.create(model=gpt_ver, messages=messages)
+    res = completion.choices[0].message.content
 
     return res
 
@@ -69,6 +74,8 @@ def generate_advice(gpt_ver, prompt):
     try:
         answer = generate_gpt(gpt_ver, prompt)
         return answer
-    except:
-        print(f"\nadvice_error\n\n")
-        return ""
+    except Exception as e:
+        print_exception()
+        if DEBUG:
+            traceback.print_exc()
+        return "Error: Failed to generate advice."

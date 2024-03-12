@@ -1,13 +1,16 @@
+import traceback
+
 import openai
 
+from config import DEBUG
 from utils.utils import print_exception
 
 
 def generate_gpt(gpt_ver, query):
     """Generate a GPT response."""
     messages = [{"role": "user", "content": query}]
-    response = openai.ChatCompletion.create(model=gpt_ver, messages=messages)
-    res = response["choices"][0]["message"]["content"]
+    completion = openai.chat.completions.create(model=gpt_ver, messages=messages)
+    res = completion.choices[0].message.content
 
     return res
 
@@ -26,5 +29,7 @@ def generate_answer(gpt_ver, jeongguan, question):
         return result
 
     except Exception as e:
-        print_exception(e)
+        print_exception()
+        if DEBUG:
+            traceback.print_exc()
         return "Error: Failed to generate answer."
