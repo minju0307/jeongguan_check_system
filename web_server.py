@@ -22,7 +22,7 @@ from inference_reference import RetrievalSearch
 from main import main
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
     CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX, \
-    TEST_MODE
+    TEST_MODE, LANGSMITH_API_KEY
 from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import JeongguanSplitterText
 
@@ -389,8 +389,11 @@ def get_result():
 app.register_blueprint(xai)
 
 if __name__ == "__main__":
-    openai_api_key = os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY)
-    openai.api_key = openai_api_key
+    # Set OpenAI environment variables
+    openai_api_key = os.environ.get("OPENAI_API_KEY")
+
+    if not openai_api_key:
+        os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
     try:
         port = SERVER_PORT

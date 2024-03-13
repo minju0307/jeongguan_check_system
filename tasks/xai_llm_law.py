@@ -1,22 +1,34 @@
+import os
+
 from celery.utils.log import get_task_logger
+
+from utils.langchain_llm import LawLLM
 
 logger = get_task_logger(__name__)
 
 import requests
 from celery import Celery
 
-from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL, DEBUG
-from main import get_advice
-from mrc import generate_answer
+from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL, DEBUG, LANGSMITH_API_KEY, \
+    OPENAI_API_KEY
 
 app = Celery(CELERY_TASK_NAME, broker=MQ_CELERY_BROKER_URL, backend=MQ_CELERY_BACKEND_URL)
 
-# set OpenAI API key
-import openai
-from config import OPENAI_API_KEY
+# Set Langsmith environment variables
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = f"XAI_Jeongguan - CeleryWorker"
+os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY  # Update to your API key
 
-openai.api_key = OPENAI_API_KEY
+# Set OpenAI environment variables
+openai_api_key = os.environ.get("OPENAI_API_KEY")
+
+if not openai_api_key:
+    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
 VERIFY_SSL = False if DEBUG else True
+
+law_llm = LawLLM(model_name=GPT_MODEL)
 
 
 @app.task(bind=True)
@@ -25,9 +37,9 @@ def llm_answer(self, uid, idx, paragraphs, q, callback_url):
     task_id = self.request.id
     task_id = task_id[:8]
 
-    # print(f'({task_id}) x: {x}, y: {y}')
-    answer = generate_answer(GPT_MODEL, "\n".join(paragraphs), q)
-    logger.debug(answer)
+    result_dict = law_llm.generate_answer(paragraphs, q)
+
+    logger.debug(result_dict)
 
     #
     # 1. uid not exist
@@ -36,8 +48,8 @@ def llm_answer(self, uid, idx, paragraphs, q, callback_url):
     data = {
         "uid": uid,
         "idx": idx,
-        "answer": answer
     }
+    data.update(result_dict)
 
     try:
         response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data, verify=VERIFY_SSL)
@@ -58,18 +70,21 @@ def llm_answer(self, uid, idx, paragraphs, q, callback_url):
         logger.error(f'({task_id}) Error: {code} - {msg}')
         return False
 
-    return answer
+    return result_dict
 
 
 @app.task(bind=True)
-def llm_advice(self, answer, uid, idx, q, sangbub, callback_url):
+def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
     # shorten the task_id
     task_id = self.request.id
     task_id = task_id[:8]
 
-    # print(f'({task_id}) x: {x}, y: {y}')
-    advice = get_advice(GPT_MODEL, q, answer, sangbub)
-    logger.debug(advice)
+    answer = result_dict['answer']
+    sentence = result_dict['sentence']
+
+    result_dict = law_llm.generate_advice(question, answer, sangbub)
+
+    logger.debug(result_dict)
 
     #
     # 1. uid not exist
@@ -79,8 +94,8 @@ def llm_advice(self, answer, uid, idx, q, sangbub, callback_url):
     data = {
         "uid": uid,
         "idx": idx,
-        "advice": advice
     }
+    data.update(result_dict)
 
     try:
         response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data, verify=VERIFY_SSL)
@@ -101,7 +116,7 @@ def llm_advice(self, answer, uid, idx, q, sangbub, callback_url):
         logger.error(f'({task_id}) Error: {code} - {msg}')
         return False
 
-    return advice
+    return result_dict
 
 
 if __name__ == "__main__":

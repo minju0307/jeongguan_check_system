@@ -1,31 +1,21 @@
 import os
 import unittest
-from uuid import uuid4
 
-from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-from config import GPT_MODEL, OPENAI_API_KEY, LANGSMITH_API_KEY
+from config import GPT_MODEL
 from main import get_advice
 from mrc import generate_answer
 from prompt.template import *
+from tests.base import BaseTest
+from utils.langchain_llm import LawLLM
 
 
-class TestLLM(unittest.TestCase):
+class TestLLM(unittest.TestCase, BaseTest):
     def setUp(self):
         self.gpt_model = GPT_MODEL
-
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
-
-        if not openai_api_key:
-            os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-
-        unique_id = uuid4().hex[0:8]
-        os.environ["LANGCHAIN_TRACING_V2"] = "true"
-        os.environ["LANGCHAIN_PROJECT"] = f"XAI_Jeongguan - TestLLM"
-        os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
-        os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY  # Update to your API key
+        self.law_llm = LawLLM(model_name=self.gpt_model)
 
     def test_llm_answer(self):
         paragraphs = [
@@ -97,18 +87,11 @@ class TestLLM(unittest.TestCase):
 제388조(이사의 보수)
 이사의 보수는 정관에 그 액을 정하지 아니한 때에는 주주총회의 결의로 이를 정한다.
 """
-        llm = ChatOpenAI(model=self.gpt_model)
+        output = self.law_llm.generate_advice(question, answer, sangbub)
 
-        prompt = ChatPromptTemplate.from_template(ADVICE_TEMPLATE)
-        chain = prompt | llm
+        print(output)
 
-        result = chain.invoke({
-            "question": question,
-            "answer": answer,
-            "retrieval_results": sangbub
-        })
-
-        print(result)
+        self.assertIn('advice', output)
 
     def test_llm_answer_and_reference(self):
         paragraphs = [
@@ -118,26 +101,9 @@ class TestLLM(unittest.TestCase):
 
         question = '정기주주총회를 개최하는가?'
 
-        llm = ChatOpenAI(model=self.gpt_model)
+        output = self.law_llm.generate_answer(paragraphs, question)
 
-        response_schemas = [
-            ResponseSchema(name="answer", description="answer to the user's question"),
-            ResponseSchema(
-                name="sentence",
-                description=" print out the clauses and supporting statements for your answer.",
-            ),
-        ]
-        output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
-        format_instructions = output_parser.get_format_instructions()
+        print(output)
 
-        prompt = ChatPromptTemplate.from_template(ANSWER_TEMPLATE_v2,
-                                                  partial_variables={"format_instructions": format_instructions})
-
-        chain = prompt | llm | output_parser
-
-        result = chain.invoke({
-            "paragraph": "\n".join(paragraphs),
-            "question": question
-        })
-
-        print(result)
+        self.assertIn('answer', output)
+        self.assertIn('sentence', output)
