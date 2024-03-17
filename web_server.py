@@ -10,19 +10,19 @@ import random
 from urllib.parse import urljoin
 
 import openai
+import pandas as pd
 from celery import Celery, signature
 from flask import Flask, request, jsonify, json, render_template, Blueprint
 from flask_cors import CORS
-from jsonschema import validate
 from werkzeug.utils import secure_filename
 
 from error_code import ErrorCode, ErrorElement
 from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
-from main import main
+
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
     CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX, \
-    TEST_MODE, LANGSMITH_API_KEY
+    TEST_MODE, QUESTION_DB_FILE
 from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import JeongguanSplitterText
 
@@ -212,8 +212,8 @@ def analyze():
             text_list.append(sub_chapter)
 
     # 체크리스트 DB 불러오기
-    questions_dict = load_json('data/jeongguan_questions_56.json')
-    questions_list = list(questions_dict.keys())
+    questions_df = pd.read_csv(QUESTION_DB_FILE)
+    questions_list = questions_df['question'].tolist()
 
     # qustions tuple with id and question
     questions_tuple = list(enumerate(questions_list))
@@ -291,6 +291,7 @@ def callback_result():
     uid = request.form.get('uid')
     idx = request.form.get('idx')
     answer = request.form.get('answer')
+    sentence = request.form.get('sentence')
     advice = request.form.get('advice')
 
     if not uid or not idx:
@@ -306,6 +307,7 @@ def callback_result():
 
     if answer:
         write_file(os.path.join(dest_dir, 'answer.txt'), [answer])
+        write_file(os.path.join(dest_dir, 'sentence.txt'), [sentence])
 
     if advice:
         write_file(os.path.join(dest_dir, 'advice.txt'), [advice])
@@ -338,8 +340,8 @@ def get_result():
     doc_paragraphs = outputs.get('doc_paragraphs')
     mapping_paragraphs = outputs.get('mapping_paragraphs')
 
-    questions_dict = load_json('data/jeongguan_questions_56.json')
-    questions = list(questions_dict.keys())
+    # 체크리스트 질문
+    questions = outputs.get('checklist_questions')
 
     for idx, q in enumerate(questions):
         # check if idx dir exists
@@ -368,9 +370,10 @@ def get_result():
             result['is_satisfied'] = False
 
             # 문단 결과 추가
-            result['paragraphs'] = []
-            for paragraph_idx in mapping_paragraphs[idx]:
-                result['paragraphs'].append(doc_paragraphs[paragraph_idx])
+            try:
+                result['sentence'] = ' '.join(read_file(os.path.join(dest_dir, subdir, 'sentence.txt')))
+            except FileNotFoundError:
+                result['sentence'] = 'Not Found'
 
         results.append(result)
 
