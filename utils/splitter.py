@@ -167,6 +167,9 @@ class JeongguanSplitter(ABC):
                     merged_sub_chapters.append(merged_text)
                     merged_text = sub_chapter
                 else:
+                    if len(merged_text) > 0:
+                        merged_text += '\n\n'
+                        
                     merged_text += sub_chapter
 
             if merged_text:
