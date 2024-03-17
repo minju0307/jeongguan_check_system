@@ -32,12 +32,12 @@ law_llm = LawLLM(model_name=GPT_MODEL)
 
 
 @app.task(bind=True)
-def llm_answer(self, uid, idx, paragraphs, q, callback_url):
+def llm_answer(self, uid, idx, paragraphs, question, callback_url):
     # shorten the task_id
     task_id = self.request.id
     task_id = task_id[:8]
 
-    result_dict = law_llm.generate_answer(paragraphs, q)
+    result_dict = law_llm.generate_answer(paragraphs, question)
 
     logger.debug(result_dict)
 
@@ -82,7 +82,7 @@ def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
     answer = result_dict['answer']
     sentence = result_dict['sentence']
 
-    result_dict = law_llm.generate_advice(question, answer, sangbub)
+    result_dict = law_llm.generate_advice_detail(question, answer, sangbub)
 
     logger.debug(result_dict)
 

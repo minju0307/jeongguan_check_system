@@ -9,9 +9,13 @@ Law XAI - Demo
         border: 1px solid var(--bs-border-color);
         border-radius: var(--bs-border-radius);
     }
+
     .scrollspy-example {
         height: 400px;
         overflow: auto;
+    }
+    .debug {
+        color: gray;
     }
 </style>
 <script type="text/javascript">
@@ -25,21 +29,24 @@ Law XAI - Demo
     }
 
     function needcheck2str(need_check) {
-        if (need_check === 0) {
+        if (need_check === 'yes') {
             return '확인필요';
-        } else if (need_check === 1) {
-            return '주의필요';
-        } else
-        {
-            return '확인불필요';
+        } else if (need_check === 'caution') {
+            return '주의요망';
+        } else if (need_check === 'no') {
+            return '문제없음';
+        } else {
+            return 'N/A';
         }
     }
 
     function isSatisfied2str(is_satisfied) {
-        if (is_satisfied === false) {
+        if (is_satisfied === 'no') {
             return '불만족';
-        } else {
+        } else if (is_satisfied === 'yes') {
             return '만족';
+        } else {
+            return 'N/A';
         }
     }
 
@@ -81,7 +88,7 @@ Law XAI - Demo
                 let content = $('#list-content');
 
                 // 장 제목 출력
-                let content_title = $('<h4>').attr('id', 'list-item-' + i).text(paragraph["title"] + ' (Score: ' + score + ')' );
+                let content_title = $('<h4>').attr('id', 'list-item-' + i).text(paragraph["title"] + ' (Score: ' + score + ')');
                 content.append(content_title);
 
                 // 조 내용 출력
@@ -154,18 +161,43 @@ Law XAI - Demo
             for (let i = 0; i < result_len; i++) {
                 let row = results[result_keys[i]];
 
+                let sentence = row.sentence;
+                let paragraphs = row.paragraphs;
+
+                let paragraph_elems = [];
+                // for loop paragraphs
+                let paragraphs_len = paragraphs.length;
+                for (let j = 0; j < paragraphs_len; j++) {
+                    let paragraph = paragraphs[j];
+
+                    let paragraph_elem = $('<p>');
+                    // add class
+                    paragraph_elem.addClass('debug');
+                    paragraph_elem.html('<b>Top-' + (j + 1) + '</b><br>' + nl2br(paragraph));
+
+                    paragraph_elems.push(paragraph_elem);
+                }
+                // list to string
+
+
                 // create toggle element
                 let aherf = $('<a>').attr('data-bs-toggle', 'collapse')
                     .attr('href', '#collapse-' + i).attr('role', 'button').attr('aria-expanded', 'false')
                     .attr('aria-controls', 'collapse-' + i).text(row.question);
 
                 let content = $('<div>').addClass('collapse').attr('id', 'collapse-' + i);
-                content.append($('<p>').addClass('mt-3').text('변호사 조언:'));
-                content.append($('<div>').addClass('mt-2').html(nl2br(row.advice)));
+                content.append($('<p>').addClass('mt-3').html('<h5>변호사 조언:</h5>'));
+                content.append($('<p>').addClass('mt-2').html(nl2br(row.advice)));
+                content.append($('<p>').addClass('mt-3').html('<h5>관련 문장:</h5>'));
+                content.append($('<p>').addClass('mt-2').html(nl2br(sentence)));
+                // for debug
+                content.append($('<p>').addClass('mt-3 debug').html('<h5>Retrieval Result (for debug):</h5>'));
+                for (let j = 0; j < paragraphs_len; j++) {
+                    content.append(paragraph_elems[j]);
+                }
+
 
                 let div = $('<div>').append(aherf).append(content);
-
-
 
                 // create table row
                 let tr = $('<tr>');
@@ -243,14 +275,15 @@ Law XAI - Demo
                                 <div id="document" class="row">
                                     <div class="col-2 mt-3">
                                         <div id="list-example" class="list-group">
-<!--                                             <a class="list-group-item list-group-item-action" href="#list-item-1">Item 1</a>-->
+                                            <!--                                             <a class="list-group-item list-group-item-action" href="#list-item-1">Item 1</a>-->
                                         </div>
                                     </div>
+
                                     <div class="col-10 mt-3">
-                                        <div id="list-content" data-bs-spy="scroll" data-bs-target="#list-example"
+                                        <div id="list-content" data-bs-spy="scroll" data-bs-target="#navbar-example"
                                              data-bs-smooth-scroll="true" class="scrollspy-example" tabindex="0">
-<!--                                            <h4 id="list-item-1">Item 1</h4>-->
-<!--                                            <p>...</p>-->
+                                            <!--                                            <h4 id="list-item-1">Item 1</h4>-->
+                                            <!--                                            <p>...</p>-->
                                         </div>
                                     </div>
                                 </div>

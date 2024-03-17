@@ -233,12 +233,12 @@ def analyze():
     sentence_embeddings = sentence_embeddings.cpu().numpy()
 
     # 체크리스트 질문 - 정관 맵핑
-    for idx, q in questions_tuple:
+    for idx, question in questions_tuple:
         # create empty dir for idx (for callback test)
         os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
 
         # 모델을 이용해 체크리스트 질문 - 정관 검색
-        paragraph_idxs = semantic_search_model.semantic_search(q, sentence_embeddings, top_k_jeongguan)
+        paragraph_idxs = semantic_search_model.semantic_search(question, sentence_embeddings, top_k_jeongguan)
         paragraph_results.append(paragraph_idxs)
 
     app.logger.debug(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
@@ -249,7 +249,7 @@ def analyze():
     advice_task = f'{CELERY_TASK_NAME}.llm_advice'
 
     count = 0
-    for (idx, q), paragraph_idxs in zip(questions_tuple, paragraph_results):
+    for (idx, question), paragraph_idxs in zip(questions_tuple, paragraph_results):
         if TEST_MODE:
             if count > 2:
                 break
@@ -258,11 +258,13 @@ def analyze():
         # paragraph_idxs to paragraphs
         paragraphs = [text_list[i] for i in paragraph_idxs]
 
-        sangbub = retrieval_search_model.retrieval_query(q, top_k_sangbub)
+        sangbub = retrieval_search_model.retrieval_query(question, top_k_sangbub)
 
         chain = (
-                signature(answer_task, args=[uid, idx, paragraphs, q, callback_url], app=task, queue=CELERY_TASK_NAME) |
-                signature(advice_task, args=[uid, idx, q, sangbub, callback_url], app=task, queue=CELERY_TASK_NAME)
+                signature(answer_task, args=[uid, idx, paragraphs, question, callback_url], app=task,
+                          queue=CELERY_TASK_NAME) |
+                signature(advice_task, args=[uid, idx, question, sangbub, callback_url], app=task,
+                          queue=CELERY_TASK_NAME)
         )
 
         result = chain()
@@ -290,9 +292,15 @@ def callback_result():
     # get flask post data
     uid = request.form.get('uid')
     idx = request.form.get('idx')
+
+    # answer callback
     answer = request.form.get('answer')
     sentence = request.form.get('sentence')
+
+    # advice callback
     advice = request.form.get('advice')
+    need_check = request.form.get('need_check')
+    is_satisfied = request.form.get('is_satisfied')
 
     if not uid or not idx:
         return json_response(msg=ErrorCode.INVALID_PARAMETER.msg, code=ErrorCode.INVALID_PARAMETER.code)
@@ -309,8 +317,23 @@ def callback_result():
         write_file(os.path.join(dest_dir, 'answer.txt'), [answer])
         write_file(os.path.join(dest_dir, 'sentence.txt'), [sentence])
 
+        data_dict = {
+            "answer": answer,
+            "sentence": sentence
+        }
+
+        save_to_json(data_dict, os.path.join(dest_dir, 'answer.json'))
+
     if advice:
         write_file(os.path.join(dest_dir, 'advice.txt'), [advice])
+
+        data_dict = {
+            "advice": advice,
+            "need_check": need_check,
+            "is_satisfied": is_satisfied
+        }
+
+        save_to_json(data_dict, os.path.join(dest_dir, 'advice.json'))
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
 
@@ -343,37 +366,43 @@ def get_result():
     # 체크리스트 질문
     questions = outputs.get('checklist_questions')
 
-    for idx, q in enumerate(questions):
+    satisfied_count = 0
+    for idx, (question, paragraph_idxs) in enumerate(zip(questions, mapping_paragraphs)):
         # check if idx dir exists
         subdir = str(idx)
 
         result = dict()
-        result['question'] = q
+        result['question'] = question
 
         if subdir not in subdirs:
             result['answer'] = '분석 중...'
             result['advice'] = '분석 중...'
         else:
             try:
-                result['answer'] = ' '.join(read_file(os.path.join(dest_dir, subdir, 'answer.txt')))
+                answer_path = os.path.join(dest_dir, subdir, 'answer.json')
+                answer_result = load_json(answer_path)
+
+                result.update(answer_result)
+
             except FileNotFoundError:
                 result['answer'] = '분석 중...'
 
             try:
-                result['advice'] = ' '.join(read_file(os.path.join(dest_dir, subdir, 'advice.txt')))
+                advice_path = os.path.join(dest_dir, subdir, 'advice.json')
+                advice_result = load_json(advice_path)
+
+                result.update(advice_result)
+
+                # count if answer is satisfied
+                if advice_result['is_satisfied'] == 'yes':
+                    satisfied_count += 1
+
             except FileNotFoundError:
                 result['advice'] = '분석 중...'
 
-            # 상태 표시
-            # TODO: 상태 표시 로직 필요
-            result['need_check'] = 0
-            result['is_satisfied'] = False
-
-            # 문단 결과 추가
-            try:
-                result['sentence'] = ' '.join(read_file(os.path.join(dest_dir, subdir, 'sentence.txt')))
-            except FileNotFoundError:
-                result['sentence'] = 'Not Found'
+        # 관련 문단 추가
+        paragraph_list = [doc_paragraphs[i] for i in paragraph_idxs]
+        result['paragraphs'] = paragraph_list
 
         results.append(result)
 
@@ -381,10 +410,8 @@ def get_result():
     output_dict['uid'] = uid
 
     # 체크리스트 만족 여부 계산
-    # TODO: 체크리스트 만족 여부 계산 로직 필요
-    satisfied_count = 0
     unsatisfied_count = len(questions) - satisfied_count
-    output_dict['checklist'] = {"satisfied_count": 0, "unsatisfied_count": unsatisfied_count}
+    output_dict['checklist'] = {"satisfied_count": satisfied_count, "unsatisfied_count": unsatisfied_count}
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code, data=output_dict)
 
