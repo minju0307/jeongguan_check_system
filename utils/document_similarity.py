@@ -73,50 +73,34 @@ class JeongguanSimilarity:
                                                                    content_similarities):
             # get top 1
             top_title_idx = title_similarity.argmax()
-            title_score = title_similarity[top_title_idx]
-            content_score = content_similarity[top_title_idx]
+            top_title_score = title_similarity[top_title_idx]
+            top_title_content_score = content_similarity[top_title_idx]
 
             top_content_idx = content_similarity.argmax()
             top_content_score = content_similarity[top_content_idx]
+            top_content_title_score = title_similarity[top_content_idx]
 
             if verbose:
                 print(f'\nsub_title: {sub_title}')
-                print(f'similarity: {title_similarity[top_title_idx]}')
-                print(f'reference: {reference_titles[top_title_idx]}')
+                print(f'title similarity: {title_similarity[top_title_idx]}')
 
-                print(f'similarity top content_idx({top_content_idx}): {top_content_score}')
-                print(f'similarity top title_idx({top_title_idx}): {content_score}')
+                print(f'content similarity top content_idx({top_content_idx}): {top_content_score}')
+                print(f'content similarity top title_idx({top_title_idx}): {top_title_content_score}')
 
             final_score = 0
             final_idx = -1
-            if title_score >= 0.85:
-                final_score = title_score
+            alpha = 0.5
+            beta = 0.5
+            if top_title_score >= 0.85:
+                final_score = top_title_score * alpha + top_title_content_score * beta
                 final_idx = top_title_idx
             else:
                 if top_content_score >= 0.85:
-                    final_score = top_content_score
+                    final_score = top_content_title_score * alpha + top_content_score * beta
                     final_idx = top_content_idx
                 else:
-                    if top_title_idx == top_content_idx:
-                        final_score = max(title_score, content_score)
-
-                        if final_score == title_score:
-                            final_idx = top_title_idx
-                        else:
-                            final_idx = top_content_idx
-
-                    else:
-                        final_score = max(title_score, content_score, top_content_score)
-
-                        if final_score == title_score:
-                            final_idx = top_title_idx
-                        elif final_score == content_score:
-                            final_idx = top_content_idx
-                        else:
-                            final_idx = top_content_idx
-
-                        warning_list.append(
-                            (sub_title, reference_titles[top_title_idx], title_score, content_score, top_content_score))
+                    final_score = top_title_score * alpha + top_content_score * beta
+                    final_idx = top_content_idx
 
             final_score = float(final_score)  # float32 to float16
             final_score = min(1.0, round(final_score, 3))
@@ -125,6 +109,8 @@ class JeongguanSimilarity:
                 print(f'final_score: {final_score}')
                 print(f'final_idx: {final_idx}')
                 print(f'reference: {reference_titles[final_idx]}')
+                print(f'top_title_title: {reference_titles[top_title_idx]}')
+                print(f'top_content_title: {reference_titles[top_content_idx]}')
 
             processed_list.append(final_score)
 
