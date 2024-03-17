@@ -10,13 +10,13 @@ import requests
 from celery import Celery
 
 from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL, DEBUG, LANGSMITH_API_KEY, \
-    OPENAI_API_KEY
+    OPENAI_API_KEY, LANGCHAIN_PROJECT
 
 app = Celery(CELERY_TASK_NAME, broker=MQ_CELERY_BROKER_URL, backend=MQ_CELERY_BACKEND_URL)
 
 # Set Langsmith environment variables
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_PROJECT"] = f"XAI_Jeongguan - CeleryWorker"
+os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
 os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
 os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY  # Update to your API key
 
