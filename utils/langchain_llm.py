@@ -34,8 +34,8 @@ class LawLLM():
 
     def generate_answer_detail(self, paragraphs, question):
         response_schemas = [
-            ResponseSchema(name="answer", description="answer to the user's question"),
-            # ResponseSchema(name="reason", description="reason for the answer"),
+            ResponseSchema(name="answer", description="answer to the user's question."),
+            ResponseSchema(name="title", description="The title of the paragraph the sentence belongs to."),
             ResponseSchema(
                 name="sentence",
                 description=" print out the clauses and supporting statements for your answer.",

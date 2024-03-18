@@ -16,7 +16,7 @@ ANSWER_TEMPLATE_v3 = """Answer the question based only on the following context:
 Context: {paragraph}
 Question: {question}
 ===
-진위형 질문이면 '예', 또는 '아니오'로 대답하고, 주관식 질문이면 한 줄로 대답하시오. 근거 문장이 포함된 조항 문장을 있는 그대로 출력하시오. 모든 답변은 한국어로 작성하시오.
+진위형 질문이면 '예', 또는 '아니오'로 대답하고, 주관식 질문이면 한 줄로 대답하시오. 답의 근거가 되는 문장을 있는 그대로 출력하시오. 모든 답변은 한국어로 작성하시오.
 
 {format_instructions}
 """

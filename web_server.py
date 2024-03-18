@@ -346,6 +346,7 @@ def callback_result():
 
     # answer callback
     answer = request.form.get('answer')
+    title = request.form.get('title')
     sentence = request.form.get('sentence')
 
     # advice callback
@@ -363,6 +364,7 @@ def callback_result():
     if answer:
         data_dict = {
             "answer": answer,
+            "title": title,
             "sentence": sentence
         }
 

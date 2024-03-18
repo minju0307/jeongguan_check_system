@@ -161,6 +161,7 @@ Law XAI - Demo
             for (let i = 0; i < result_len; i++) {
                 let row = results[result_keys[i]];
 
+                let title = row.title;
                 let sentence = row.sentence;
                 let paragraphs = row.paragraphs;
 
@@ -189,6 +190,7 @@ Law XAI - Demo
                 content.append($('<p>').addClass('mt-3').html('<h5>변호사 조언:</h5>'));
                 content.append($('<p>').addClass('mt-2').html(nl2br(row.advice)));
                 content.append($('<p>').addClass('mt-3').html('<h5>관련 문장:</h5>'));
+                content.append($('<p>').addClass('mt-2').html(nl2br(title)));
                 content.append($('<p>').addClass('mt-2').html(nl2br(sentence)));
                 // for debug
                 content.append($('<p>').addClass('mt-3 debug').html('<h5>Retrieval Result (for debug):</h5>'));
