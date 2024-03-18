@@ -40,7 +40,7 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
     task_id = self.request.id
     task_id = task_id[:8]
 
-    result_dict = law_llm.generate_answer(paragraphs, question)
+    result_dict = law_llm.generate_answer_detail(paragraphs, question)
 
     logger.debug(result_dict)
 
@@ -61,7 +61,7 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
         return False
 
     # 200 OK
-    if response.status_code != 200:
+    if response.status_code not in [200, 201]:
         logger.error(f'({task_id}) HTTP Error: {response.status_code} - {response.text}')
         return False
 
@@ -99,7 +99,7 @@ def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
         return False
 
     # 200 OK
-    if response.status_code != 200:
+    if response.status_code not in [200, 201]:
         logger.error(f'({task_id}) Error: {response.status_code} - {response.text}')
         return False
 
