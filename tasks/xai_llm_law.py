@@ -12,6 +12,9 @@ from celery import Celery
 from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL, DEBUG, LANGSMITH_API_KEY, \
     OPENAI_API_KEY, LANGCHAIN_PROJECT
 
+if DEBUG:
+    logger.setLevel('DEBUG')
+
 app = Celery(CELERY_TASK_NAME, broker=MQ_CELERY_BROKER_URL, backend=MQ_CELERY_BACKEND_URL)
 
 # Set Langsmith environment variables
@@ -59,15 +62,7 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
 
     # 200 OK
     if response.status_code != 200:
-        logger.error(f'({task_id}) Error: {response.status_code} - {response.text}')
-        return False
-
-    result = response.json()
-    code = result.get('code')
-    msg = result.get('msg')
-
-    if code != 200:
-        logger.error(f'({task_id}) Error: {code} - {msg}')
+        logger.error(f'({task_id}) HTTP Error: {response.status_code} - {response.text}')
         return False
 
     return result_dict
@@ -106,14 +101,6 @@ def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
     # 200 OK
     if response.status_code != 200:
         logger.error(f'({task_id}) Error: {response.status_code} - {response.text}')
-        return False
-
-    result = response.json()
-    code = result.get('code')
-    msg = result.get('msg')
-
-    if code != 200:
-        logger.error(f'({task_id}) Error: {code} - {msg}')
         return False
 
     return result_dict

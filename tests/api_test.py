@@ -161,6 +161,28 @@ class TestAPI(unittest.TestCase, BaseTest):
         # remove directory for uid
         rmtree(dest_dir)
 
+    def test_dummpy_callback(self):
+        url = urljoin(self.url, "callback_test")
+
+        data = {}
+
+        try:
+            response = requests.post(url, headers={"Authorization": self.auth_token}, data=data, verify=False)
+        except requests.exceptions.ConnectionError as e:
+            print(f'ConnectionError: {e}')
+            return False
+
+        # 200 OK
+        if response.status_code != 200:
+            print(response.text)
+            self.assertEqual(200, response.status_code)
+
+        res = response.json()
+
+        self.assertEqual(ErrorCode.SUCCESS.code, res['code'])
+
+        pprint(res)
+
 
 if __name__ == "__main__":
     unittest.main()
