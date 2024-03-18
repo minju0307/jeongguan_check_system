@@ -217,6 +217,14 @@ class JeongguanSplitter(ABC):
 
         return document
 
+    def find_sub_chapter_title(self, sentence):
+        for i, sub_chapter_list in enumerate(self.sub_chapters):
+            for j, sub_chapter in enumerate(sub_chapter_list):
+                if sentence in sub_chapter:
+                    return self.sub_titles[i][j]
+
+        return False
+
     def set_scores(self, sub_scores):
         self.sub_scores = sub_scores
 
