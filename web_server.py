@@ -333,7 +333,7 @@ def callback_test():
     )
 
     result = chain()
-    app.logger.debug(f"  Celery Result ID: {result.id}")
+    app.logger.debug(f"Celery Result ID: {result.id}")
 
     return json_response(msg=ErrorCode.SUCCESS.msg, code=ErrorCode.SUCCESS.code)
 
@@ -361,9 +361,6 @@ def callback_result():
     os.makedirs(dest_dir, exist_ok=True)
 
     if answer:
-        write_file(os.path.join(dest_dir, 'answer.txt'), [answer])
-        write_file(os.path.join(dest_dir, 'sentence.txt'), [sentence])
-
         data_dict = {
             "answer": answer,
             "sentence": sentence
@@ -372,8 +369,6 @@ def callback_result():
         save_to_json(data_dict, os.path.join(dest_dir, 'answer.json'))
 
     if advice:
-        write_file(os.path.join(dest_dir, 'advice.txt'), [advice])
-
         data_dict = {
             "advice": advice,
             "need_check": need_check,

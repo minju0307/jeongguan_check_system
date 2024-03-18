@@ -161,7 +161,7 @@ class TestAPI(unittest.TestCase, BaseTest):
         # remove directory for uid
         rmtree(dest_dir)
 
-    def test_dummpy_callback(self):
+    def test_dummy_callback(self):
         url = urljoin(self.url, "callback_test")
 
         data = {}
