@@ -99,23 +99,46 @@ sequenceDiagram
     - `checklist_questions`: 요청받은 qustions을 순서대로 응답
     - `uid`: request 시 넘어온 uid를 그대로 반환
 
+
+
 ## Callback 정의
 
 callback은 `/analyze` 요청 시 `callback_url` 변수에 설정한 URL로 응답을 합니다. 응답의 형식은 아래와 같습니다.
 
 - **Method**: `POST`
 - **Path Parameters**:
-  - `uid`: `/analyze` 요청의 응답으로 받은 고유값
-  - `idx`: question의 인덱스 번호
-  - `answer`: MRC 답변 결과
-  - `advice`: 변호사 조언 답변 결과
+  - **공통**
+    - `uid`: `/analyze` 요청의 응답으로 받은 고유값
+    - `idx`: question의 인덱스 번호
+  
+  - **answer callback**
+    - `answer`: MRC 답변 결과
+    - `sentence`: 답변 결과가 포함된 문장
+  - **advice callback**
+    - `advice`: 변호사 조언 답변 결과
+    - `need_check`: 수정 필요 여부에 대한 응답(yes, caution, no)
+    - `is_satisfied`: 만족 여부에 대한 응답(yes, no)
+  
 
 
 
 callback은 각 질문마다 두 차례로 나뉘어서 응답이 됩니다. 
 
-- 첫 번째 응답: `uid`, `idx`, `answer` 를 응답
-- 첫 번째 응답: `uid`, `idx`, `advice` 를 응답
+- 첫 번째 응답(answer callback): `uid`, `idx`와 answer callback의 값을 리턴
+- 첫 번째 응답(advice callback): `uid`, `idx`와 advice callback의 값을 리턴
+
+### Callback 테스트
+
+위에 정의된 형식으로 callback이 잘 되는지를 테스트하기 위해서는 아래 주소로 요청을 하시면 됩니다. 테스트는 사전에 정해놓은 질문 1개에 대해 OpenAI API의 질의 후 결과를 callback 하도록 구현되어 있습니다. 매 요청시마다 answer callback과 advice callback이 각각 요청이 됩니다.
+
+- **URL**: `/callback_test`
+- **Method**: `POST`
+- **Path Parameters**:  
+  - `callback_url`: callback을 받고자 하는 URL 주소
+  - `uid`: 없을 경우 자동 생성됨
+- **Response**: 
+  - **Type**: `Content-Type: application/json`
+  - 성공 시 `SUCCESS(200)` 코드를 리턴
 
 
 
