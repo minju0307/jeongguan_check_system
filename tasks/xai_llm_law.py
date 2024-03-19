@@ -1,6 +1,8 @@
 import os
+import time
 
 from celery.utils.log import get_task_logger
+from openai import RateLimitError
 
 from utils.langchain_llm import LawLLM
 
@@ -33,6 +35,9 @@ VERIFY_SSL = False if DEBUG else True
 
 law_llm = LawLLM(model_name=GPT_MODEL)
 
+RETRY_COUNT = 5
+RETRY_WAIT = 10
+
 
 @app.task(bind=True)
 def llm_answer(self, uid, idx, paragraphs, question, callback_url):
@@ -40,9 +45,26 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
     task_id = self.request.id
     task_id = task_id[:8]
 
-    result_dict = law_llm.generate_answer_detail(paragraphs, question)
+    retry_count = RETRY_COUNT
 
-    logger.debug(result_dict)
+    has_error = False
+    result_dict = None
+    error_msg = ""
+
+    while retry_count > 0:
+        try:
+            result_dict = law_llm.generate_answer_detail(paragraphs, question)
+            logger.debug(result_dict)
+        except RateLimitError as e:
+            print("Hit error")
+            has_error = True
+            error_msg = e.message
+            time.sleep(RETRY_WAIT)
+        else:
+            has_error = False
+            break
+
+        retry_count -= 1
 
     #
     # 1. uid not exist
@@ -52,7 +74,12 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
         "uid": uid,
         "idx": idx,
     }
-    data.update(result_dict)
+
+    if has_error:
+        data["error"] = "RateLimitError"
+        logger.error(f'({task_id}) RateLimitError: {error_msg}')
+    else:
+        data.update(result_dict)
 
     try:
         response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data, verify=VERIFY_SSL)
@@ -70,6 +97,11 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
 
 @app.task(bind=True)
 def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
+    # type check
+    if not isinstance(result_dict, dict):
+        logger.error(f'({self.request.id}) result_dict is not a dict: {result_dict}')
+        return False
+
     # shorten the task_id
     task_id = self.request.id
     task_id = task_id[:8]
@@ -77,9 +109,26 @@ def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
     answer = result_dict['answer']
     sentence = result_dict['sentence']
 
-    result_dict = law_llm.generate_advice_detail(question, answer, sangbub)
+    retry_count = RETRY_COUNT
 
-    logger.debug(result_dict)
+    has_error = False
+    result_dict = None
+    error_msg = ""
+
+    while retry_count > 0:
+        try:
+            result_dict = law_llm.generate_advice_detail(question, answer, sangbub)
+            logger.debug(result_dict)
+        except RateLimitError as e:
+            print("Hit error")
+            has_error = True
+            error_msg = e.message
+            time.sleep(RETRY_WAIT)
+        else:
+            has_error = False
+            break
+
+        retry_count -= 1
 
     #
     # 1. uid not exist
@@ -90,7 +139,12 @@ def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
         "uid": uid,
         "idx": idx,
     }
-    data.update(result_dict)
+
+    if has_error:
+        data["error"] = "RateLimitError"
+        logger.error(f'({task_id}) RateLimitError: {error_msg}')
+    else:
+        data.update(result_dict)
 
     try:
         response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data, verify=VERIFY_SSL)
