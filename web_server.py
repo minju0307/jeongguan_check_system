@@ -213,6 +213,9 @@ def analyze():
     # 체크리스트 DB 불러오기
     questions_df = pd.read_csv(QUESTION_DB_FILE)
     questions_list = questions_df['question'].tolist()
+    questions_type = questions_df['type'].tolist()
+
+    questions_dict = [{'question': q, 'type': t} for q, t in zip(questions_list, questions_type)]
 
     # qustions tuple with id and question
     questions_tuple = list(enumerate(questions_list))
@@ -272,7 +275,7 @@ def analyze():
     app.logger.debug(f"Elapsed Time(Question-Sangbub): {time.time() - start_time:.2f} sec")
 
     outputs["uid"] = uid
-    outputs["checklist_questions"] = questions_list
+    outputs["checklist_questions"] = questions_dict
 
     if input_uid is None:
         outputs["document"] = document
