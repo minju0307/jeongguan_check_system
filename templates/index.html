@@ -23,8 +23,8 @@ Law XAI - Demo
         try {
             return str.replace(/\n/g, "<br />");
         } catch (e) {
-            console.log(e);
-            console.log(str);
+            console.log(e.stack);
+            console.log('input text: ' + str);
         }
     }
 
@@ -41,9 +41,11 @@ Law XAI - Demo
     }
 
     function isSatisfied2str(is_satisfied) {
-        if (is_satisfied === 'no') {
+        if (is_satisfied === '0') {
             return '불만족';
-        } else if (is_satisfied === 'yes') {
+        } else if (is_satisfied === '1') {
+            return '확인필요';
+        } else if (is_satisfied === '2') {
             return '만족';
         } else {
             return 'N/A';
@@ -184,7 +186,7 @@ Law XAI - Demo
                 // create toggle element
                 let aherf = $('<a>').attr('data-bs-toggle', 'collapse')
                     .attr('href', '#collapse-' + i).attr('role', 'button').attr('aria-expanded', 'false')
-                    .attr('aria-controls', 'collapse-' + i).text(row.question);
+                    .attr('aria-controls', 'collapse-' + i).text(row.question['question']);
 
                 let content = $('<div>').addClass('collapse').attr('id', 'collapse-' + i);
                 content.append($('<p>').addClass('mt-3').html('<h5>변호사 조언:</h5>'));
@@ -205,11 +207,9 @@ Law XAI - Demo
                 let tr = $('<tr>');
                 tr.append($('<td>').text(i + 1));
                 tr.append($('<td>').append(div));
-                // tr.append($('<td>').text(row.answer));
                 tr.append($('<td>').append(row.answer));
+                tr.append($('<td>').text(row.question['type']));
                 tr.append($('<td>').text(isSatisfied2str(row.is_satisfied)));
-                tr.append($('<td>').text(needcheck2str(row.need_check)));
-                // tr.append($('<td>').text(row.advice));
                 tbody.append(tr);
             }
         }
@@ -303,8 +303,8 @@ Law XAI - Demo
                                 <th scope="col" style="width: 4%">번호</th>
                                 <th scope="col">질문</th>
                                 <th scope="col" style="width: 20%">답변</th>
+                                <th scope="col" style="width: 10%">타입</th>
                                 <th scope="col" style="width: 10%">내용만족여부</th>
-                                <th scope="col" style="width: 10%">내용검토필요</th>
                             </tr>
                             </thead>
                             <tbody>

@@ -433,6 +433,8 @@ def get_result():
 
             except FileNotFoundError:
                 result['answer'] = '분석 중...'
+                result['title'] = '분석 중...'
+                result['sentence'] = '분석 중...'
 
             try:
                 advice_path = os.path.join(dest_dir, subdir, 'advice.json')
@@ -446,6 +448,7 @@ def get_result():
 
             except FileNotFoundError:
                 result['advice'] = '분석 중...'
+                result['is_satisfied'] = '분석 중...'
 
         # 관련 문단 추가
         paragraph_list = [doc_paragraphs[i] for i in paragraph_idxs]
