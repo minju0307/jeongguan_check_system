@@ -354,7 +354,6 @@ def callback_result():
 
     # advice callback
     advice = request.form.get('advice')
-    need_check = request.form.get('need_check')
     is_satisfied = request.form.get('is_satisfied')
 
     if not uid or not idx:
@@ -376,7 +375,6 @@ def callback_result():
     if advice:
         data_dict = {
             "advice": advice,
-            "need_check": need_check,
             "is_satisfied": is_satisfied
         }
 
@@ -443,7 +441,7 @@ def get_result():
                 result.update(advice_result)
 
                 # count if answer is satisfied
-                if advice_result['is_satisfied'] == 'yes':
+                if advice_result['is_satisfied'] == '2':
                     satisfied_count += 1
 
             except FileNotFoundError:

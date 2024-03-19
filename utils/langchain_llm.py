@@ -79,8 +79,7 @@ class LawLLM():
     def generate_advice_detail(self, question, answer, sangbub):
         response_schemas = [
             ResponseSchema(name="advice", description="advice to the user's question"),
-            ResponseSchema(name="is_satisfied", description="whether the answer is satisfied or not. Select (yes/no)"),
-            ResponseSchema(name="need_check", description="whether the answer needs to be checked or not. Select (yes/caution/no)"),
+            ResponseSchema(name="is_satisfied", description="whether the answer satisfies the context or requires verification. \n0: Unsatisfied, 1: Verification required, 2: Satisfied"),
         ]
         output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
         format_instructions = output_parser.get_format_instructions()

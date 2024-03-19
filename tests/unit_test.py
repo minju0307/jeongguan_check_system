@@ -109,7 +109,7 @@ class TestUnit(unittest.TestCase, BaseTest):
 
         splitter = JeongguanSplitterText(file_path, verbose=False)
 
-        doc_sim = JeongguanSimilarity(semantic_search_model, splitter=splitter, ref_doc=reference_doc)
+        doc_sim = JeongguanSimilarity(semantic_search_model, splitter=splitter, ref_doc=reference_doc, verbose=True)
         sub_scores = doc_sim.get_result()
         print(sub_scores)
 
@@ -122,6 +122,10 @@ class TestUnit(unittest.TestCase, BaseTest):
         print(document)
 
     def test_find_sub_chapter_title(self):
+        """
+        문장이 포함된 조항의 이름을 찾는 테스트
+        :return:
+        """
         sentence = "② 회사는 임시주주총회의 소집 기타 필요한 경우 이사회의 결의로 3월을 경과하지 아니하는 일정한 기간을 정하여 권리에 관한 주주명부의 기재변경을 정지하거나 이사회의 결의로 정한 날에 주주명부에 기재되어 있는 주주를 그 권리를 행사할 주주로 할 수 있으며, 이사회가 필요하다고 인정하는 경우에는 주주명부의 기재변경 정지와 기준일의 지정을 함께 할 수 있다."
 
         file_dir = '../input_samples'
