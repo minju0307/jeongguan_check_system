@@ -49,7 +49,22 @@ sequenceDiagram
   - **Type**: `Content-Type: application/json`
   
   - **data**:
-    - `checklist_questions`: 56개의 qustions을 순서대로 응답
+    - `checklist_questions`:  qustions 목록
+    
+      - 형식 예:
+    
+        ```json
+        [
+          {
+            "question": "정기주주총회를 개최하는가?",
+            "type": 1
+          },
+              {
+            "question": "정기주주총회는 언제 소집하나?",
+            "type": 2
+          }
+        ]
+        ```
     
     - `doc_paragraphs`: 분할된 문단 리스트
     
@@ -69,7 +84,7 @@ sequenceDiagram
         	}
         ]
         ```
-      
+    
     - `uid`: 생성된 고유값
 
 #### 상태 코드
@@ -110,14 +125,13 @@ callback은 `/analyze` 요청 시 `callback_url` 변수에 설정한 URL로 응�
   - **공통**
     - `uid`: `/analyze` 요청의 응답으로 받은 고유값
     - `idx`: question의 인덱스 번호
-  
   - **answer callback**
     - `answer`: MRC 답변 결과
+    - `title`: 답변이 포함된 조항의 이름
     - `sentence`: 답변 결과가 포함된 문장
   - **advice callback**
     - `advice`: 변호사 조언 답변 결과
-    - `need_check`: 수정 필요 여부에 대한 응답(yes, caution, no)
-    - `is_satisfied`: 만족 여부에 대한 응답(yes, no)
+    - `is_satisfied`: 만족 여부에 대한 응답(0: 불만족, 1:확인필요, 2:만족)
   
 
 
