@@ -3,11 +3,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from prompt.template import *
+from logger import logger
 
 
 class LawLLM():
     def __init__(self, model_name):
         self.llm = ChatOpenAI(model=model_name)
+        self.logger = logger.getChild(self.__class__.__name__)
 
     def generate_answer(self, paragraphs, question):
         response_schemas = [
@@ -79,10 +81,13 @@ class LawLLM():
     def generate_advice_detail(self, question, answer, sangbub):
         response_schemas = [
             ResponseSchema(name="advice", type="string", description="advice to the user's question"),
-            ResponseSchema(name="is_satisfied", type="integer", description="whether the answer satisfies the context or requires verification. (0: Unsatisfied, 1: Verification required, 2: Satisfied)"),
+            ResponseSchema(name="is_satisfied", type="integer",
+                           description="whether the answer satisfies the context or requires verification. (0: Unsatisfied, 1: Verification required, 2: Satisfied)"),
         ]
         output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+
         format_instructions = output_parser.get_format_instructions()
+        self.logger.debug(format_instructions)
 
         prompt = ChatPromptTemplate.from_template(ADVICE_TEMPLATE_v3,
                                                   partial_variables={"format_instructions": format_instructions})

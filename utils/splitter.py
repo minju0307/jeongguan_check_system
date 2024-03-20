@@ -130,12 +130,12 @@ class JeongguanSplitter(ABC):
         titles, chapters = split_content(self.content, chapter_pattern, include_title=False, verbose=self.verbose)
 
         # 보칙 제거
-        pattern_list = ['보칙', '부칙']
-        for idx, title in enumerate(titles):
-            new_title = ''.join(title.split())
-            if any([pattern in new_title for pattern in pattern_list]):
-                titles.pop(idx)
-                chapters.pop(idx)
+        # pattern_list = ['보칙']
+        # for idx, title in enumerate(titles):
+        #     new_title = ''.join(title.split())
+        #     if any([pattern in new_title for pattern in pattern_list]):
+        #         titles.pop(idx)
+        #         chapters.pop(idx)
 
         assert len(titles) == len(chapters)
 
