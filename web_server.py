@@ -1,11 +1,9 @@
-import logging
+from logger import logger
 import os
 import ssl
 import string
 import time
 from datetime import datetime
-from distutils.file_util import write_file
-from logging.config import dictConfig
 import random
 from urllib.parse import urljoin
 
@@ -24,41 +22,11 @@ from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API
     TEST_MODE, QUESTION_DB_FILE
 from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import JeongguanSplitterText
-
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json, save_to_json
 
-dictConfig({
-    'version': 1,
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s',
-        }
-    },
-    'handlers': {
-        'wsgi': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://flask.logging.wsgi_errors_stream',
-            'formatter': 'default'
-        },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'web_server.log',
-            'formatter': 'default'
-        }
-    },
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi', 'file']
-    },
-    'loggers': {
-        'waitress': {
-            'level': 'INFO'
-        }
-    }
-})
+logger.info('Start XAI_Law Web Server!')
 
 app = Flask(__name__)
-app.logger.setLevel(logging.DEBUG)
 app.config['SECRET_KEY'] = 'secret!'
 app.config['UPLOAD_FOLDER'] = os.path.join(APP_ROOT, UPLOAD_FOLDER)
 app.config["JSON_AS_ASCII"] = False  # 한국어 지원을 위한 설정
