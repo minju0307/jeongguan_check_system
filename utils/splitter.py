@@ -18,6 +18,15 @@ def update_prev_idx(start, end, include_title):
         return end
 
 
+def find_title_idx_in_document(title, document):
+    for i, item in enumerate(document):
+        for j, sub_item in enumerate(item['content']):
+            if title in sub_item['title']:
+                return (i, j)
+
+    return (-1, -1)
+
+
 def split_content(content, chapter_pattern, include_title=True, verbose=False):
     # find chapter index from content
     chapter_idxs = [(m.start(), m.end()) for m in re.finditer(chapter_pattern, content)]
@@ -224,6 +233,14 @@ class JeongguanSplitter(ABC):
                     return self.sub_titles[i][j]
 
         return False
+
+    def find_sub_chapter_idx_by_title(self, input_text):
+        for i, sub_title_list in enumerate(self.sub_titles):
+            for j, sub_title in enumerate(sub_title_list):
+                if input_text in sub_title:
+                    return (i, j)
+
+        return (-1, -1)
 
     def set_scores(self, sub_scores):
         self.sub_scores = sub_scores

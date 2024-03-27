@@ -5,6 +5,8 @@ from celery.utils.log import get_task_logger
 from openai import RateLimitError
 
 from utils.langchain_llm import LawLLM
+from utils.splitter import find_title_idx_in_document
+from utils.utils import load_json
 
 logger = get_task_logger(__name__)
 
@@ -12,7 +14,7 @@ import requests
 from celery import Celery
 
 from config import MQ_CELERY_BROKER_URL, MQ_CELERY_BACKEND_URL, CELERY_TASK_NAME, GPT_MODEL, DEBUG, LANGSMITH_API_KEY, \
-    OPENAI_API_KEY, LANGCHAIN_PROJECT
+    OPENAI_API_KEY, LANGCHAIN_PROJECT, APP_ROOT
 
 if DEBUG:
     logger.setLevel('DEBUG')
@@ -81,6 +83,19 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
     else:
         data.update(result_dict)
 
+    uid_path = os.path.join(APP_ROOT, 'tmp', uid)
+    json_file = os.path.join(uid_path, 'outputs.json')
+
+    try:
+        parsed_output = load_json(json_file)
+
+        idx_tuple = find_title_idx_in_document(result_dict['title'], parsed_output['document'])
+        data['doc_idx_i'] = idx_tuple[0]
+        data['doc_idx_j'] = idx_tuple[1]
+
+    except FileNotFoundError:
+        pass
+
     try:
         response = requests.post(callback_url, headers={"Authorization": auth_token}, data=data, verify=VERIFY_SSL)
     except requests.exceptions.ConnectionError as e:
@@ -92,7 +107,7 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
         logger.error(f'({task_id}) HTTP Error: {response.status_code} - {response.text}')
         return False
 
-    return result_dict
+    return data
 
 
 @app.task(bind=True)

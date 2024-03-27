@@ -319,6 +319,8 @@ def callback_result():
     answer = request.form.get('answer')
     title = request.form.get('title')
     sentence = request.form.get('sentence')
+    doc_idx_i = request.form.get('doc_idx_i')
+    doc_idx_j = request.form.get('doc_idx_j')
 
     # advice callback
     advice = request.form.get('advice')
@@ -335,7 +337,8 @@ def callback_result():
         data_dict = {
             "answer": answer,
             "title": title,
-            "sentence": sentence
+            "sentence": sentence,
+            "chapter_idx": (doc_idx_i, doc_idx_j)
         }
 
         save_to_json(data_dict, os.path.join(dest_dir, 'answer.json'))
