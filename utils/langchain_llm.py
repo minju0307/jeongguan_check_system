@@ -1,6 +1,8 @@
+import re
+
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from prompt.template import *
 from logger import logger
@@ -9,6 +11,7 @@ from logger import logger
 class LawLLM():
     def __init__(self, model_name):
         self.llm = ChatOpenAI(model=model_name)
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
         self.logger = logger.getChild(self.__class__.__name__)
 
     def generate_answer(self, paragraphs, question):
@@ -101,3 +104,36 @@ class LawLLM():
         })
 
         return result
+
+    def generate_rewrite_query(self, question):
+        response_schemas = [
+            ResponseSchema(name="result", type="string", description="generated example query"),
+        ]
+        output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+
+        format_instructions = output_parser.get_format_instructions()
+        self.logger.debug(format_instructions)
+
+        prompt = ChatPromptTemplate.from_template(RETRIEVAL_REWRITE_TEMPLATE,
+                                                  partial_variables={"format_instructions": format_instructions})
+
+        chain = prompt | self.llm | output_parser
+
+        result = chain.invoke({
+            "question": question,
+        })
+
+        generated_text = result['result']
+        cleaned_res = re.sub(r"제\s*\d+조", '', generated_text)
+
+        result['result'] = cleaned_res
+
+        return result
+
+    def get_embedding(self, text):
+        return self.embeddings.embed_query(text)
+
+    def get_embedding_from_documents(self, documents):
+        return self.embeddings.embed_documents(documents)
+
+

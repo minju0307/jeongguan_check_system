@@ -1,11 +1,25 @@
 import os
 import re
+
+import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from config import MULTILABEL_MODEL_PATH, APP_ROOT
 from inference_paragraph import SemanticSearch
 from utils.splitter import JeongguanSplitterText, JeongguanSplitter
 from utils.utils import load_json
+
+
+def retrieve_top3(vec, paragraph_vectors):
+    # list to numpy
+    vec = np.array(vec)
+    vec = vec.reshape(1, -1)
+    paragraph_vectors = np.array(paragraph_vectors)
+
+    cosine_similarities = cosine_similarity(vec, paragraph_vectors)
+    top_3_indices = cosine_similarities.argsort()[0][-3:][::-1]  # 상위 3개 인덱스
+    top_3_values = np.sort(cosine_similarities[0])[-3:][::-1]
+    return top_3_indices, top_3_values
 
 
 class JeongguanSimilarity:

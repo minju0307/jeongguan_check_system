@@ -188,6 +188,19 @@ class JeongguanSplitter(ABC):
 
         return merged_chapters
 
+    def get_paragraphs(self):
+        # merge sub_chapters to around merge_len
+        paragraphs = []
+        paragraph_idxs = []
+
+        # convert to flat list
+        for i, sub_chapter_list in enumerate(self.sub_chapters):
+            for j, sub_chapter in enumerate(sub_chapter_list):
+                paragraphs.append(sub_chapter)
+                paragraph_idxs.append((i, j))
+
+        return paragraphs, paragraph_idxs
+
     def get_titles(self):
         return self.titles
 

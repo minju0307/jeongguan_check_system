@@ -1,3 +1,5 @@
+import pickle
+
 from logger import logger
 import os
 import ssl
@@ -19,8 +21,9 @@ from inference_reference import RetrievalSearch
 
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
     CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX, \
-    TEST_MODE, QUESTION_DB_FILE
-from utils.document_similarity import JeongguanSimilarity
+    TEST_MODE, QUESTION_DB_FILE, GPT_MODEL
+from utils.document_similarity import JeongguanSimilarity, retrieve_top3
+from utils.langchain_llm import LawLLM
 from utils.splitter import JeongguanSplitterText
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json, save_to_json
 
@@ -163,20 +166,12 @@ def analyze():
     merged_chapters = splitter.get_merged_chapters()
 
     # document 유사도 분석
-    reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json'))
-    doc_sim = JeongguanSimilarity(semantic_search_model, splitter=splitter, ref_doc=reference_doc)
-    sub_scores = doc_sim.get_result()
-    splitter.set_scores(sub_scores)
-    print(sub_scores)
+    # reference_doc = load_json(os.path.join(APP_ROOT, 'data/reference_document.json'))
+    # doc_sim = JeongguanSimilarity(semantic_search_model, splitter=splitter, ref_doc=reference_doc)
+    # sub_scores = doc_sim.get_result()
+    # splitter.set_scores(sub_scores)
 
     document = splitter.get_document(sub_chapter=True)
-
-    chapter_idx_list = []
-    text_list = []
-    for idx, sub_chapter_list in enumerate(merged_chapters):
-        for j, sub_chapter in enumerate(sub_chapter_list):
-            chapter_idx_list.append(idx)
-            text_list.append(sub_chapter)
 
     # 체크리스트 DB 불러오기
     questions_df = pd.read_csv(QUESTION_DB_FILE)
@@ -199,17 +194,27 @@ def analyze():
 
     paragraph_results = []
 
-    sentence_embeddings = semantic_search_model.get_embedding(text_list)
-    sentence_embeddings = sentence_embeddings.cpu().numpy()
+    # 문단 임베딩
+    paragraphs_list, paragraphs_idxs = splitter.get_paragraphs()
 
-    # 체크리스트 질문 - 정관 맵핑
+    law_llm = LawLLM(model_name=GPT_MODEL)
+    paragraph_vectors = law_llm.get_embedding_from_documents(paragraphs_list)
+
+    # load pickle file
+    vector_file = os.path.join(APP_ROOT, 'data/rewrite_query_vectors.pkl')
+    rewrite_query_vectors = pickle.load(open(vector_file, 'rb'))
+
+    # 체크리스트 질문 - 문단 맵핑
     for idx, question in questions_tuple:
+        rewrite_query_vector = rewrite_query_vectors[idx]
+
         # create empty dir for idx (for callback test)
         os.makedirs(os.path.join('tmp', uid, str(idx)), exist_ok=True)
 
-        # 모델을 이용해 체크리스트 질문 - 정관 검색
-        paragraph_idxs = semantic_search_model.semantic_search(question, sentence_embeddings, top_k_jeongguan)
-        paragraph_results.append(paragraph_idxs)
+        top_3_indices, top_3_values = retrieve_top3(rewrite_query_vector, paragraph_vectors)
+        # to list
+        top_3_indices = top_3_indices.tolist()
+        paragraph_results.append(top_3_indices)
 
     app.logger.debug(f"Elapsed Time(Question-Paragraph): {time.time() - start_time:.2f} sec")
 
@@ -226,7 +231,7 @@ def analyze():
             count += 1
 
         # paragraph_idxs to paragraphs
-        paragraphs = [text_list[i] for i in paragraph_idxs]
+        paragraphs = [paragraphs_list[i] for i in paragraph_idxs]
 
         sangbub = retrieval_search_model.retrieval_query(question, top_k_sangbub)
 
@@ -247,7 +252,7 @@ def analyze():
 
     if input_uid is None:
         outputs["document"] = document
-        outputs["doc_paragraphs"] = text_list
+        outputs["doc_paragraphs"] = paragraphs_list
         outputs["mapping_paragraphs"] = paragraph_results
 
     # save outputs to json (for later test)
