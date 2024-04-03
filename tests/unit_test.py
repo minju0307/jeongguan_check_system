@@ -10,7 +10,7 @@ from inference_paragraph import SemanticSearch
 from main import split_document_shorter
 from tests.base import BaseTest
 from utils.document_similarity import JeongguanSimilarity
-from utils.splitter import filter_text, JeongguanSplitterText
+from utils.splitter import filter_text, JeongguanSplitterText, find_title_idx_in_document
 from utils.utils import read_file, load_json
 
 
@@ -134,6 +134,35 @@ class TestUnit(unittest.TestCase, BaseTest):
         splitter = JeongguanSplitterText(file_path, verbose=False)
 
         print(f'title: {splitter.find_sub_chapter_title(sentence)}')
+
+    def test_find_title_idx(self):
+        #
+        # json file에서 title의 index를 찾는 테스트
+        #
+        uid = 'test_full_result'
+
+        uid_path = os.path.join(APP_ROOT, 'tmp', uid)
+        json_file = os.path.join(uid_path, 'outputs.json')
+        data = load_json(json_file)
+
+        title = "제8조의4(종류주식의 수와 내용③)"
+
+        result1 = find_title_idx_in_document(title, data['document'])
+
+        #
+        # text file에서 title의 index를 찾는 테스트
+        #
+        file_dir = '../input_samples'
+        file_path = os.path.join(file_dir, '1.txt')
+
+        splitter = JeongguanSplitterText(file_path, verbose=False)
+
+        result2 = splitter.find_title_idx(title)
+
+        #
+        # 두 결과가 같은지 확인
+        #
+        self.assertEqual(result1, result2)
 
     def tearDown(self):
         pass

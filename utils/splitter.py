@@ -234,13 +234,10 @@ class JeongguanSplitter(ABC):
 
         return False
 
-    def find_sub_chapter_idx_by_title(self, input_text):
-        for i, sub_title_list in enumerate(self.sub_titles):
-            for j, sub_title in enumerate(sub_title_list):
-                if input_text in sub_title:
-                    return (i, j)
+    def find_title_idx(self, title):
+        document = self.get_document(sub_chapter=True)
 
-        return (-1, -1)
+        return find_title_idx_in_document(title, document)
 
     def set_scores(self, sub_scores):
         self.sub_scores = sub_scores
