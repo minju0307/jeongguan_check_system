@@ -42,10 +42,15 @@ sequenceDiagram
 - **Method**: `POST`
 
 - **Path Parameters**:
-  - `file`: 정관 파일(.txt 파일을 multipart/form-data로 전송)
+  
+  - `file`: 정관 파일 (.txt 파일을 multipart/form-data로 전송)
   - `callback_url`: callback을 받고자 하는 URL 주소
+  - `gpt_model`: OpenAI에서 제공하는 모델의 이름
+    - `gpt-3.5-turbo` (기본값)
+    - `gpt-4-turbo-preview`
   
 - **Response**:
+  
   - **Type**: `Content-Type: application/json`
   
   - **data**:
