@@ -45,8 +45,8 @@ class BiEncoder(torch.nn.Module):
         torch.save(deepcopy(self.state_dict()), model_ckpt_path)
         logger.debug(f"model self.state_dict saved to {model_ckpt_path}")
 
-    def load(self, model_ckpt_path):
+    def load(self, model_ckpt_path, device=None):
         with open(model_ckpt_path, "rb") as f:
-            state_dict = torch.load(f)
+            state_dict = torch.load(f, map_location=device)
         self.load_state_dict(state_dict)
         logger.debug(f"model self.state_dict loaded from {model_ckpt_path}")

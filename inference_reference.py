@@ -14,10 +14,11 @@ import json
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-def load_training_state(model, optimizer, scheduler, model_path, optim_path) -> None:
+def load_training_state(model, optimizer, scheduler, model_path, optim_path, device=None) -> None:
     """모델, optimizer와 기타 정보를 로드합니다"""
-    model.load(model_path)
-    training_state = torch.load(optim_path)
+    model.load(model_path, device=device)
+
+    training_state = torch.load(optim_path, map_location=device)
     optimizer.load_state_dict(training_state["optimizer_state"])
     scheduler.load_state_dict(training_state["scheduler_state"])
 
@@ -118,6 +119,7 @@ class RetrievalSearch:
             self.scheduler,
             self.config_dict["model_path"],
             self.config_dict["optim_path"],
+            self.device
         )
 
         """index 불러오기"""

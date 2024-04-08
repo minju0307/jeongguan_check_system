@@ -42,17 +42,18 @@ ALLOWED_EXTENSIONS = {'txt'}
 xai = Blueprint('xai', __name__, url_prefix=f'/{URL_PREFIX}')
 
 with app.app_context():
-    semantic_search_model: SemanticSearch = None
+    # semantic_search_model: SemanticSearch = None
     retrieval_search_model: RetrievalSearch = None
 
 task = Celery('tasks', broker=MQ_CELERY_BROKER_URL)
 
 
 def init_models():
-    global semantic_search_model, retrieval_search_model
+    # global semantic_search_model, retrieval_search_model
+    global retrieval_search_model
 
-    if semantic_search_model is None:
-        semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
+    # if semantic_search_model is None:
+    #     semantic_search_model = SemanticSearch(model_path=MULTILABEL_MODEL_PATH)
     if retrieval_search_model is None:
         retrieval_search_model = RetrievalSearch(model_path=DPR_MODEL_PATH)
 
