@@ -1,9 +1,12 @@
+import inspect
+import os
 import re
 
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
+from config import LANGCHAIN_PROJECT, LANGSMITH_API_KEY
 from prompt.template import *
 from logger import logger
 
@@ -13,6 +16,12 @@ class LawLLM():
         self.llm = ChatOpenAI(model=model_name)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
         self.logger = logger.getChild(self.__class__.__name__)
+
+        # Set Langsmith environment variables
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
+        os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+        os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY  # Update to your API key
 
     def generate_answer(self, paragraphs, question):
         response_schemas = [
@@ -29,6 +38,10 @@ class LawLLM():
                                                   partial_variables={"format_instructions": format_instructions})
 
         chain = prompt | self.llm | output_parser
+        chain = chain.with_config({
+            "run_name": inspect.currentframe().f_code.co_name,
+            "tags": [self.llm.model_name]
+        })
 
         result = chain.invoke({
             "paragraph": "\n".join(paragraphs),
@@ -53,6 +66,10 @@ class LawLLM():
                                                   partial_variables={"format_instructions": format_instructions})
 
         chain = prompt | self.llm | output_parser
+        chain = chain.with_config({
+            "run_name": inspect.currentframe().f_code.co_name,
+            "tags": [self.llm.model_name]
+        })
 
         result = chain.invoke({
             "paragraph": "\n".join(paragraphs),
@@ -72,6 +89,10 @@ class LawLLM():
                                                   partial_variables={"format_instructions": format_instructions})
 
         chain = prompt | self.llm | output_parser
+        chain = chain.with_config({
+            "run_name": inspect.currentframe().f_code.co_name,
+            "tags": [self.llm.model_name]
+        })
 
         result = chain.invoke({
             "question": question,
@@ -96,6 +117,10 @@ class LawLLM():
                                                   partial_variables={"format_instructions": format_instructions})
 
         chain = prompt | self.llm | output_parser
+        chain = chain.with_config({
+            "run_name": inspect.currentframe().f_code.co_name,
+            "tags": [self.llm.model_name]
+        })
 
         result = chain.invoke({
             "question": question,
@@ -118,6 +143,10 @@ class LawLLM():
                                                   partial_variables={"format_instructions": format_instructions})
 
         chain = prompt | self.llm | output_parser
+        chain = chain.with_config({
+            "run_name": inspect.currentframe().f_code.co_name,
+            "tags": [self.llm.model_name]
+        })
 
         result = chain.invoke({
             "question": question,
@@ -135,5 +164,3 @@ class LawLLM():
 
     def get_embedding_from_documents(self, documents):
         return self.embeddings.embed_documents(documents)
-
-
