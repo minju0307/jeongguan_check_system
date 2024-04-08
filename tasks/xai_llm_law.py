@@ -35,14 +35,12 @@ if not openai_api_key:
 
 VERIFY_SSL = False if DEBUG else True
 
-law_llm = LawLLM(model_name=GPT_MODEL)
-
 RETRY_COUNT = 5
 RETRY_WAIT = 10
 
 
 @app.task(bind=True)
-def llm_answer(self, uid, idx, paragraphs, question, callback_url):
+def llm_answer(self, uid, idx, paragraphs, question, callback_url, gpt_model=GPT_MODEL):
     # shorten the task_id
     task_id = self.request.id
     task_id = task_id[:8]
@@ -52,6 +50,8 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
     has_error = False
     result_dict = None
     error_msg = ""
+
+    law_llm = LawLLM(model_name=gpt_model)
 
     while retry_count > 0:
         try:
@@ -111,7 +111,7 @@ def llm_answer(self, uid, idx, paragraphs, question, callback_url):
 
 
 @app.task(bind=True)
-def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
+def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url, gpt_model=GPT_MODEL):
     # type check
     if not isinstance(result_dict, dict):
         logger.error(f'({self.request.id}) result_dict is not a dict: {result_dict}')
@@ -129,6 +129,8 @@ def llm_advice(self, result_dict, uid, idx, question, sangbub, callback_url):
     has_error = False
     result_dict = None
     error_msg = ""
+
+    law_llm = LawLLM(model_name=gpt_model)
 
     while retry_count > 0:
         try:

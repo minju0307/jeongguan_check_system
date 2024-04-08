@@ -14,6 +14,7 @@ Law XAI - Demo
         height: 400px;
         overflow: auto;
     }
+
     .debug {
         color: gray;
     }
@@ -251,6 +252,15 @@ Law XAI - Demo
                         <label for="formFile" class="col-sm-3 col-form-label">정관파일(txt)</label>
                         <div class="col-sm-9">
                             <input class="form-control" type="file" id="formFile" name="file">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="formFile" class="col-sm-3 col-form-label">모델</label>
+                        <div class="col-sm-9">
+                            <select class="form-select" aria-label="모델 선택" name="gpt_model">
+                                <option value="gpt-3.5-turbo-0125">gpt-3.5-turbo-0125</option>
+                                <option value="gpt-4-0125-preview">gpt-4-0125-preview</option>
+                            </select>
                         </div>
                     </div>
 

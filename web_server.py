@@ -128,6 +128,7 @@ def analyze():
 
     input_q_ids = request.form.get('q_ids')
     input_uid = request.form.get('uid')
+    gpt_model = request.form.get('gpt_model', GPT_MODEL)
 
     # split and to int
     q_id_list = [int(i) for i in input_q_ids.split(',')] if input_q_ids else None
@@ -198,7 +199,7 @@ def analyze():
     # 문단 임베딩
     paragraphs_list, paragraphs_idxs = splitter.get_paragraphs()
 
-    law_llm = LawLLM(model_name=GPT_MODEL)
+    law_llm = LawLLM(model_name=gpt_model)
     paragraph_vectors = law_llm.get_embedding_from_documents(paragraphs_list)
 
     # load pickle file
@@ -237,9 +238,9 @@ def analyze():
         sangbub = retrieval_search_model.retrieval_query(question, top_k_sangbub)
 
         chain = (
-                signature(answer_task, args=[uid, idx, paragraphs, question, callback_url], app=task,
+                signature(answer_task, args=[uid, idx, paragraphs, question, callback_url, gpt_model], app=task,
                           queue=CELERY_TASK_NAME) |
-                signature(advice_task, args=[uid, idx, question, sangbub, callback_url], app=task,
+                signature(advice_task, args=[uid, idx, question, sangbub, callback_url, gpt_model], app=task,
                           queue=CELERY_TASK_NAME)
         )
 

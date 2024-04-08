@@ -1,3 +1,9 @@
+RETRIEVAL_REWRITE_TEMPLATE = """너는 변호사로서, 회사 [정관]과 관련된 질문에 답해야해. 이때 [정관]에 대한 질문이 주어지면 '[정관 조항]: '으로 시작하고 해당 질문과 관련된 정관 조항 한 개를 직접 작성해봐. 단, 300자 이내로 작성해야해. 모든 답변은 한국어로 작성하시오
+[질문]: {question}
+
+{format_instructions}
+"""
+
 ANSWER_TEMPLATE = """정관 문서: {paragraph}
 질문: {question}
 ===
@@ -16,7 +22,7 @@ ANSWER_TEMPLATE_v3 = """Answer the question based only on the following context:
 Context: {paragraph}
 Question: {question}
 ===
-진위형 질문이면 '예', 또는 '아니오'로 대답하고, 주관식 질문이면 한 줄로 대답하시오. 답의 근거가 되는 문장을 있는 그대로 출력하시오. 모든 답변은 한국어로 작성하시오.
+진위형 질문이면 '예', 또는 '아니오'로 대답하고, 주관식 질문이면 한 줄로 대답하시오. context와 question의 관련이 없을 경우 '없음'을 출력하시오. 답의 근거가 되는 문장을 있는 그대로 출력하시오. 모든 답변은 한국어로 작성하시오.
 
 {format_instructions}
 """
