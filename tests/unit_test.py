@@ -164,5 +164,10 @@ class TestUnit(unittest.TestCase, BaseTest):
         #
         self.assertEqual(result1, result2)
 
+        spaced_title = "제8조의4 (종류주식의 수와 내용③)"
+        result3 = splitter.find_title_idx(spaced_title)
+
+        self.assertEqual(result2, result3)
+
     def tearDown(self):
         pass

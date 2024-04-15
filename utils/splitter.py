@@ -19,9 +19,14 @@ def update_prev_idx(start, end, include_title):
 
 
 def find_title_idx_in_document(title, document):
+    title = ''.join(title.split())
+
     for i, item in enumerate(document):
         for j, sub_item in enumerate(item['content']):
-            if title in sub_item['title']:
+            title_ref = sub_item['title']
+            title_ref = ''.join(title_ref.split())
+
+            if title == title_ref:
                 return (i, j)
 
     return (-1, -1)
