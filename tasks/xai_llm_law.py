@@ -182,7 +182,7 @@ if __name__ == "__main__":
     worker_options = {
         'loglevel': 'INFO',
         'traceback': True,
-        'concurrency': 30,
+        'concurrency': 25,
     }
 
     # set queue

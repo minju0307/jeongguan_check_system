@@ -23,40 +23,14 @@ class LawLLM():
         os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
         os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY  # Update to your API key
 
-    def generate_answer(self, paragraphs, question):
-        response_schemas = [
-            ResponseSchema(name="answer", description="answer to the user's question"),
-            ResponseSchema(
-                name="sentence",
-                description=" print out the clauses and supporting statements for your answer.",
-            ),
-        ]
-        output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
-        format_instructions = output_parser.get_format_instructions()
-
-        prompt = ChatPromptTemplate.from_template(ANSWER_TEMPLATE_v2,
-                                                  partial_variables={"format_instructions": format_instructions})
-
-        chain = prompt | self.llm | output_parser
-        chain = chain.with_config({
-            "run_name": inspect.currentframe().f_code.co_name,
-            "tags": [self.llm.model_name]
-        })
-
-        result = chain.invoke({
-            "paragraph": "\n".join(paragraphs),
-            "question": question
-        })
-
-        return result
-
     def generate_answer_detail(self, paragraphs, question):
         response_schemas = [
-            ResponseSchema(name="answer", description="answer to the user's question."),
-            ResponseSchema(name="title", description="The title of the paragraph the sentence belongs to."),
+            ResponseSchema(name="answer", description="The answer to the user's question."),
+            ResponseSchema(name="title",
+                           description="The title of the paragraph to which the sentence belongs, always in the form '제#조(title)'. If the answer is not supported by the context, output N/A."),
             ResponseSchema(
                 name="sentence",
-                description=" print out the clauses and supporting statements for your answer.",
+                description="Print the sentence that supports your answer. If the answer is not supported by the context, output N/A."
             ),
         ]
         output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
@@ -75,6 +49,16 @@ class LawLLM():
             "paragraph": "\n".join(paragraphs),
             "question": question
         })
+
+        self.logger.debug(f'LLM result: {result}')
+
+        # post-process
+        if result['title'] == 'N/A' or result['sentence'] == 'N/A':
+            result['title'] = ''
+            result['sentence'] = ''
+
+        if result['answer'] == 'N/A':
+            result['answer'] = '없음'
 
         return result
 
@@ -163,4 +147,10 @@ class LawLLM():
         return self.embeddings.embed_query(text)
 
     def get_embedding_from_documents(self, documents):
+        """Get embeddings from a list of documents.
+        Args:
+            documents (List[str]): List of documents.
+        Returns:
+            List of embeddings. (size: [num_paragraphs, 3072])
+        """
         return self.embeddings.embed_documents(documents)

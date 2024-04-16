@@ -141,6 +141,44 @@ class TestLLM(unittest.TestCase, BaseTest):
 
         self.assertIn('advice', output)
 
+    def test_get_answer_by_question(self):
+
+        # question = '정기주주총회를 개최하는가?'
+        # question = '발기인의 주소가 정관에 기재되어 있습니까?'
+        question = '발기인의 주민등록번호가 정관에 기재되어 있습니까?'
+        output = self.law_llm.generate_rewrite_query(question)
+
+        rewrite_result = output['result']
+        print(rewrite_result)
+
+        embedding = self.law_llm.get_embedding(rewrite_result)
+        print(f'size of embedding: {len(embedding)}')
+
+        file_path = os.path.join(APP_ROOT, 'input_samples/aoi_for_testing.txt')
+
+        splitter = JeongguanSplitterText(file_path, verbose=False)
+        paragraphs, paragraphs_idxs = splitter.get_paragraphs()
+
+        start_time = time.time()
+
+        paragraph_vectors = self.law_llm.get_embedding_from_documents(paragraphs)
+        # for paragraph in paragraphs:
+        #     # TODO: 조의 번호를 빼면 더 retrieval이 잘 될까?
+        #     paragraph_vectors.append(self.law_llm.get_embedding(paragraph))
+        #     break
+
+        print(f"Elapsed time: {time.time() - start_time}")
+
+        top_3_indices, top_3_values = retrieve_top3(embedding, paragraph_vectors)
+        print(top_3_indices)
+        print(top_3_values)
+
+        retrieved_paragraphs = [paragraphs[idx] for idx in top_3_indices]
+
+        # get answer
+        output = self.law_llm.generate_answer_detail(retrieved_paragraphs, question)
+        print(output)
+
     def test_llm_fallback(self):
         from openai import RateLimitError
         import httpx

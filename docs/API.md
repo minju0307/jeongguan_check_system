@@ -45,8 +45,9 @@ sequenceDiagram
   
   - `file`: 정관 파일 (.txt 파일을 multipart/form-data로 전송)
   - `callback_url`: callback을 받고자 하는 URL 주소
-  - `gpt_model`: OpenAI에서 제공하는 모델의 이름
+  - `gpt_model`: OpenAI에서 제공하는 모델의 이름 (사용 가능한 모델은 [OpenAI Models](https://platform.openai.com/docs/models/models)에서 확인 가능)
     - `gpt-3.5-turbo` (기본값)
+    - `gpt-4-turbo`
     - `gpt-4-turbo-preview`
   
 - **Response**:

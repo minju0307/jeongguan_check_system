@@ -165,6 +165,11 @@ Law XAI - Demo
                 let row = results[result_keys[i]];
 
                 let title = row.title;
+                // if chapter_idx in row, create chapter_idx string
+                let chapter_idx = row.chapter_idx;
+                let chapter_idx_str = chapter_idx === undefined ? '' :
+                    'chapter_idx: (' + chapter_idx[0] + ',' + chapter_idx[1] + ')';
+
                 let sentence = row.sentence;
                 let paragraphs = row.paragraphs;
 
@@ -196,6 +201,7 @@ Law XAI - Demo
                 content.append($('<p>').addClass('mt-2').html(nl2br(title)));
                 content.append($('<p>').addClass('mt-2').html(nl2br(sentence)));
                 // for debug
+                content.append($('<p>').addClass('mt-2 debug').html(chapter_idx_str));
                 content.append($('<p>').addClass('mt-3 debug').html('<h5>Retrieval Result (for debug):</h5>'));
                 for (let j = 0; j < paragraphs_len; j++) {
                     content.append(paragraph_elems[j]);
@@ -258,8 +264,9 @@ Law XAI - Demo
                         <label for="formFile" class="col-sm-3 col-form-label">모델</label>
                         <div class="col-sm-9">
                             <select class="form-select" aria-label="모델 선택" name="gpt_model">
-                                <option value="gpt-3.5-turbo-0125">gpt-3.5-turbo-0125</option>
-                                <option value="gpt-4-0125-preview">gpt-4-0125-preview</option>
+                                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                                <option value="gpt-4-turbo">gpt-4-turbo</option>
+                                <option value="gpt-4-turbo-preview">gpt-4-turbo-preview</option>
                             </select>
                         </div>
                     </div>
