@@ -1,5 +1,7 @@
 export ENVIRONMENT=dev
 
+COMPOSE_PROJECT_NAME=dev-xai-law
+
 cp ../requirements.txt .
 
-docker compose -f docker-compose.yml build
+docker compose -p $COMPOSE_PROJECT_NAME -f docker-compose.yml build

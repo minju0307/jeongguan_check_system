@@ -1,3 +1,5 @@
 export ENVIRONMENT=dev
 
-docker compose down
+COMPOSE_PROJECT_NAME=dev-xai-law
+
+docker compose -p $COMPOSE_PROJECT_NAME down

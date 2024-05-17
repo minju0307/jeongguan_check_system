@@ -1,6 +1,6 @@
 version: "1.0"
 services:
-  xai-law:
+  main:
     build:
       context: .
       dockerfile: Dockerfile
