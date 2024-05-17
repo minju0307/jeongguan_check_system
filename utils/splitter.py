@@ -8,7 +8,7 @@ from utils.utils import read_file
 
 def filter_text(text):
     text = ' '.join(text.split())
-    return text[:100]
+    return text[:100] + "..." if len(text) > 100 else text
 
 
 def update_prev_idx(start, end, include_title):
@@ -32,7 +32,7 @@ def find_title_idx_in_document(title, document):
     return (-1, -1)
 
 
-def split_content(content, chapter_pattern, include_title=True, verbose=False):
+def split_content(content, chapter_pattern, include_title=True, include_addition=False, verbose=False):
     # find chapter index from content
     chapter_idxs = [(m.start(), m.end()) for m in re.finditer(chapter_pattern, content)]
 
@@ -71,12 +71,23 @@ def split_content(content, chapter_pattern, include_title=True, verbose=False):
         idx += 1
 
     # add last content
-    last_content = content[prev_idx:]
-    content_list.append(last_content)
-    filtered_content = filter_text(last_content)
+    last_content = content[prev_idx:].strip()
 
-    if verbose:
-        print(f'split {idx + 1}(len:{len(last_content)}): {filtered_content}')
+    # 부칙 처리
+    # split content by additional pattern
+    additional_pattern = r'^\s+부\s+칙'
+    additional_idxs = [(m.start(), m.end()) for m in re.finditer(additional_pattern, content, re.MULTILINE)]
+
+    if len(additional_idxs) > 0:
+        start = additional_idxs[0][0]
+        last_content = content[prev_idx:start].strip()
+        content_list.append(last_content)
+
+        if include_addition:
+            additional_content = content[start:].strip()
+            content_list.append(additional_content)
+    else:
+        content_list.append(last_content)
 
     assert len(title_list) == len(content_list)
 
@@ -142,14 +153,6 @@ class JeongguanSplitter(ABC):
 
     def split_chapters(self, chapter_pattern):
         titles, chapters = split_content(self.content, chapter_pattern, include_title=False, verbose=self.verbose)
-
-        # 보칙 제거
-        # pattern_list = ['보칙']
-        # for idx, title in enumerate(titles):
-        #     new_title = ''.join(title.split())
-        #     if any([pattern in new_title for pattern in pattern_list]):
-        #         titles.pop(idx)
-        #         chapters.pop(idx)
 
         assert len(titles) == len(chapters)
 
