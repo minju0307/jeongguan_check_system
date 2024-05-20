@@ -80,11 +80,14 @@ def split_content(content, chapter_pattern, include_title=True, include_addition
 
     if len(additional_idxs) > 0:
         start = additional_idxs[0][0]
+        end = additional_idxs[0][1]
         last_content = content[prev_idx:start].strip()
         content_list.append(last_content)
 
         if include_addition:
-            additional_content = content[start:].strip()
+            additional_title = content[start:end].strip()
+            additional_content = content[end:].strip()
+            title_list.append(additional_title)
             content_list.append(additional_content)
     else:
         content_list.append(last_content)
@@ -152,7 +155,8 @@ class JeongguanSplitter(ABC):
         pass
 
     def split_chapters(self, chapter_pattern):
-        titles, chapters = split_content(self.content, chapter_pattern, include_title=False, verbose=self.verbose)
+        titles, chapters = split_content(self.content, chapter_pattern, include_title=False, include_addition=False,
+                                         verbose=self.verbose)
 
         assert len(titles) == len(chapters)
 
