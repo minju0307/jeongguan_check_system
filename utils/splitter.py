@@ -34,7 +34,7 @@ def find_title_idx_in_document(title, document):
 
 def split_content(content, chapter_pattern, include_title=True, include_addition=False, verbose=False):
     # find chapter index from content
-    chapter_idxs = [(m.start(), m.end()) for m in re.finditer(chapter_pattern, content)]
+    chapter_idxs = [(m.start(), m.end()) for m in re.finditer(chapter_pattern, content, re.MULTILINE)]
 
     if verbose:
         print(f'\nsplit_content: {chapter_pattern}')
@@ -139,8 +139,8 @@ class JeongguanSplitter(ABC):
         self.merge_len = merge_len
         self.verbose = verbose
 
-        chapter_pattern = r'((\n)제[ ]{0,}\d+[ ]{0,}장.+)'
-        sub_chapter_pattern = r'((\n|^)제[ ]{0,}\d{,2}[ ]{0,}조[의]?[ ]{0,}\d{,2}[ ]{0,})\(([^\)]+)\)'
+        chapter_pattern = r'(^\s*제[ ]{0,}\d+[ ]{0,}장.+)'
+        sub_chapter_pattern = r'(^\s*제[ ]{0,}\d{,2}[ ]{0,}조[의]?[ ]{0,}\d{,2}[ ]{0,})\(([^\)]+)\)'
 
         space_pattern = r'[ ]{2,}'
         self.content = re.sub(space_pattern, ' ', content)
