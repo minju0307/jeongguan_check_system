@@ -11,28 +11,15 @@ from main import split_document_shorter
 from tests.base import BaseTest
 from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import filter_text, JeongguanSplitterText, find_title_idx_in_document
-from utils.utils import read_file, load_json
+from utils.utils import read_file, load_json, save_to_json
 
 
 class TestUnit(unittest.TestCase, BaseTest):
     def setUp(self):
         pass
 
-    def test_split_paragraph(self):
-        print('test_1')
-        input_lines = read_file('../input_samples/1.txt')
-        input_text = '\n'.join(input_lines)
-
-        input_texts = split_document_shorter(input_text)
-
-        for idx, line_text in enumerate(input_texts):
-            filtered_content = filter_text(line_text)
-            print(f'split {idx + 1}(len: {len(line_text)}): {filtered_content}')
-        print()
-
     def test_split_jeongguan(self):
         file_dir = '../input_samples'
-        # files = ['1.txt', '61.txt', '83.txt', '138.txt', '148.txt']
         normal_files = ['1.txt', '61.txt', '83.txt']
         abnormal_files = ['65e6964faef64e7ba7e76bae.txt']
         # files = ['1.txt']
@@ -45,7 +32,7 @@ class TestUnit(unittest.TestCase, BaseTest):
             try:
                 self.split_jeongguan(file_path)
             except AssertionError:
-                self.logger.error(f'AssertionError: {file}')
+                self.logger.info(f'AssertionError: {file}')
                 is_error = True
             finally:
                 self.assertTrue(is_error)
@@ -55,7 +42,24 @@ class TestUnit(unittest.TestCase, BaseTest):
             print(f'file: {file}')
 
             self.split_jeongguan(file_path)
-            self.logger.debug(f'file: {file} is done')
+            self.logger.info(f'file: {file} is done')
+
+    def test_split_jeongguan_and_save(self):
+        file_dir = '../input_samples'
+        normal_files = ['1.txt', '61.txt', '83.txt']
+
+        file = normal_files[0]
+
+        file_path = os.path.join(file_dir, file)
+        file = os.path.basename(file_path)
+
+        splitter = JeongguanSplitterText(file_path, verbose=True)
+        documents = splitter.get_document(sub_chapter=True)
+        print(documents)
+
+        out_file = f'{file}.json'
+        save_to_json(documents, out_file)
+        self.logger.info(f'save to {out_file}')
 
     def split_jeongguan(self, file_path):
 

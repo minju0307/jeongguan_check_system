@@ -27,6 +27,15 @@ Question: {question}
 {format_instructions}
 """
 
+ANSWER_TEMPLATE_v4 = """Answer the question based only on the following context:
+Context: {paragraph}
+Question: {question}
+===
+Answer '예' or '아니오' for true questions, or a single line for open-ended questions. If the context is not relevant to the question, print 'N/A'. Print the sentence you are basing your answer on verbatim. Write all answers in Korean.
+
+{format_instructions}
+"""
+
 ADVICE_TEMPLATE = """[회사의 정관 검토 내역]
 Q.감사의 임기는 얼마인가? A.2년
 
