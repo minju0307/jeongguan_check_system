@@ -174,8 +174,8 @@ class TestLLM(unittest.TestCase, BaseTest):
         out_file = os.path.join(self.tmp_output_dir, 'paragraph_embedding.pkl')
         pickle.dump(paragraph_vectors, open(out_file, 'wb'))
 
-        print(f"Elapsed time: {time.time() - start_time}")
-        print(f'file saved: {out_file}')
+        self.logger.info(f"Elapsed time: {time.time() - start_time}")
+        self.logger.info(f'File saved: {out_file}')
 
     def test_llm_fallback(self):
         from openai import RateLimitError

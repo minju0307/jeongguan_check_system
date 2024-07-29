@@ -1,19 +1,11 @@
-import logging
 import os
+from logger import logger
 
 from config import LANGSMITH_API_KEY, OPENAI_API_KEY
 
 
 class BaseTest():
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-
-    formatter = logging.Formatter('%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s')
-    handler.setFormatter(formatter)
-
-    logger.addHandler(handler)
+    logger = logger.getChild("BaseTest")
 
     # Set Langsmith environment variables
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
