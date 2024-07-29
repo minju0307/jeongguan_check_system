@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from config import GPT_MODEL, APP_ROOT
 from prompt.template import *
-from tests.base import BaseTest
+from base import BaseTest
 from utils.document_similarity import retrieve_top3
 from utils.langchain_llm import LawLLM
 from utils.splitter import JeongguanSplitterText
@@ -19,6 +19,11 @@ class TestLLM(unittest.TestCase, BaseTest):
     def setUp(self):
         self.gpt_model = GPT_MODEL
         self.law_llm = LawLLM(model_name=self.gpt_model)
+
+        self.tmp_output_dir = os.path.join(APP_ROOT, 'tmp/test')
+        if not os.path.exists(self.tmp_output_dir):
+            os.makedirs(self.tmp_output_dir)
+
 
     def test_llm_answer_langchain(self):
         paragraphs = [
@@ -166,10 +171,11 @@ class TestLLM(unittest.TestCase, BaseTest):
         paragraph_vectors = self.law_llm.get_embedding_from_documents(paragraphs)
 
         # save to pickle
-        out_file = os.path.join(APP_ROOT, 'tmp/test/paragraph_embedding.pkl')
+        out_file = os.path.join(self.tmp_output_dir, 'paragraph_embedding.pkl')
         pickle.dump(paragraph_vectors, open(out_file, 'wb'))
 
         print(f"Elapsed time: {time.time() - start_time}")
+        print(f'file saved: {out_file}')
 
     def test_llm_fallback(self):
         from openai import RateLimitError
