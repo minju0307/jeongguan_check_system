@@ -1,0 +1,49 @@
+import os
+from urllib.parse import urljoin
+
+# DEBUG
+DEBUG = True
+TEST_MODE = False
+# TEST_MODE = True
+
+# RabbitMQ Info
+MQ_HOST = ''
+MQ_USER_ID = ''
+MQ_USER_PW = ''
+MQ_PORT = 5672
+
+# 애플리케이션 루트 디렉토리
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = 'uploads'
+
+# 테스트 서버 PORT
+SERVER_HOST = 'localhost'
+SERVER_PORT = 5000
+
+URL_PREFIX = 'xai_law'
+
+# 외부에서 접근 가능한 URL
+SERVICE_URL = f'https://sv2:{SERVER_PORT}/{URL_PREFIX}/'
+DEFAULT_CALLBACK_URL = urljoin(SERVICE_URL, "callback_result")
+
+OPENAI_API_KEY = ""
+
+LANGCHAIN_PROJECT = "XAI_Jeongguan - CeleryWorker"
+LANGSMITH_API_KEY = "ls__7e1b38b13b4049769c571c3e20be8a83"
+
+MQ_CELERY_BROKER_URL = f'amqp://{MQ_USER_ID}:{MQ_USER_PW}@{MQ_HOST}:{MQ_PORT}//'
+MQ_CELERY_BACKEND_URL = f'rpc://{MQ_USER_ID}:{MQ_USER_PW}@{MQ_HOST}:{MQ_PORT}//'
+
+# Celery Queue Name
+CELERY_TASK_NAME = 'dev-xai_llm_law'
+
+# GPT_MODEL = 'gpt-4-turbo'
+GPT_MODEL = 'gpt-3.5-turbo'
+
+QUESTION_DB_FILE = os.path.join(APP_ROOT, 'data/jeongguan_questions.csv')
+DPR_MODEL_PATH = os.path.join(APP_ROOT, 'models/dpr_model')
+MULTILABEL_MODEL_PATH = os.path.join(APP_ROOT, 'models/multilabel_model')
+
+# SSL
+SSL_CERT = 'resources/ssl/fullchain.pem'
+SSL_KEY = 'resources/ssl/privkey.pem'
