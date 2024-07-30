@@ -182,8 +182,8 @@ def generate_gpt(model, input_text):
         {"role": "system", "content": "You are a professional Lawyer"},
         {"role": "user", "content": input_text}
     ]
-    response = openai.ChatCompletion.create(model=model, messages=messages, temperature=0.5)
-    res = response["choices"][0]["message"]["content"]
+    response = openai.chat.completions.create(model=model, messages=messages, temperature=0.5)
+    res = response.choices[0].message.content
     return res
 
 def generate_label(model, jg, category_list, jg_category):
@@ -219,8 +219,8 @@ The response should be in Korean, where given categories are all in Korean.
         {"role": "user", "content": input}
     ]
     print(input)
-    response = openai.ChatCompletion.create(model=model, messages=messages, temperature=0.3, response_format={"type": "json_object"})
-    res = response["choices"][0]["message"]["content"]
+    response = openai.chat.completions.create(model=model, messages=messages, temperature=0.3, response_format={"type": "json_object"})
+    res = response.choices[0].message.content
     print(res)
     return res
 
@@ -296,8 +296,8 @@ The response should be in Korean, where given categories are all in Korean.
         {"role": "user", "content": input}
     ]
     print(input)
-    response = openai.ChatCompletion.create(model=model, messages=messages, temperature=0.3,response_format={"type": "json_object"})
-    res = response["choices"][0]["message"]["content"]
+    response = openai.chat.completions.create(model=model, messages=messages, temperature=0.3,response_format={"type": "json_object"})
+    res = response.choices[0].message.content
 
     print(res)
     return res

@@ -36,7 +36,7 @@ class RELLegalAdvisor:
 만약 #사용자 정관 조항#에서 언급하고 있는 다른 정관 조항이 있다면 "타 정관 조항"에 해당 조항 번호(예: 제25조,제11조의2)를 '조' 단위까지만 기입하라. 언급하는 정관 조항의 갯수가 여러 개일 경우, #로 구분하여 답하라. 없다면 "타 정관 조항"에 "없음"이라고 답하라.
 연관된 상법이 없으면 없기 때문에 평가할 수 없다고 총평을 작성하고, 수정사항이 있다면 수정사항에 집중하여 총평을 작성하라.
 위의 요구사항을 모두 만족하는 JSON 형식으로 #RESPONSE FORMAT#에 맞게 답하라."""
-            res = openai.ChatCompletion.create(
+            res = openai.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1
