@@ -5,9 +5,19 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG ROOT_USER=root
 ARG ROOT_PW=${ROOT_USER}
 
+#
 # Locale Setting
+#
 ENV LC_ALL C.UTF-8
 RUN echo 'export LC_ALL=C.UTF-8' >> ~/.bashrc
+
+#
+# Timezone Setting
+#
+RUN apt-get update && apt-get install -y tzdata
+RUN ls /usr/share/zoneinfo && \
+ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
+echo "Asia/Seoul" > /etc/timezone
 
 #
 # OPENSSH

@@ -16,13 +16,12 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 from error_code import ErrorCode, ErrorElement
-from inference_paragraph import SemanticSearch
 from inference_reference import RetrievalSearch
 
 from config import SERVER_PORT, APP_ROOT, UPLOAD_FOLDER, SERVICE_URL, OPENAI_API_KEY, MQ_CELERY_BROKER_URL, \
     CELERY_TASK_NAME, DEFAULT_CALLBACK_URL, MULTILABEL_MODEL_PATH, DPR_MODEL_PATH, SSL_CERT, SSL_KEY, DEBUG, URL_PREFIX, \
     TEST_MODE, QUESTION_DB_FILE, GPT_MODEL
-from utils.document_similarity import JeongguanSimilarity, retrieve_top3
+from utils.document_similarity import retrieve_top3
 from utils.langchain_llm import LawLLM
 from utils.splitter import JeongguanSplitterText
 from utils.utils import allowed_file, json_response_element, json_response, read_file, load_json, save_to_json
