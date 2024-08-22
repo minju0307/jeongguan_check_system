@@ -6,6 +6,7 @@ import unittest
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
+from codes.absolute_legal_advisor import ABSLegalAdvisor
 from config import GPT_MODEL, APP_ROOT
 from prompt.template import *
 from base import BaseTest
@@ -23,7 +24,6 @@ class TestLLM(unittest.TestCase, BaseTest):
         self.tmp_output_dir = os.path.join(APP_ROOT, 'tmp/test')
         if not os.path.exists(self.tmp_output_dir):
             os.makedirs(self.tmp_output_dir)
-
 
     def test_llm_answer_langchain(self):
         paragraphs = [

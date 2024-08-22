@@ -7,7 +7,6 @@ import numpy as np
 
 from config import MULTILABEL_MODEL_PATH, APP_ROOT
 from inference_paragraph import SemanticSearch
-from main import split_document_shorter
 from tests.base import BaseTest
 from utils.document_similarity import JeongguanSimilarity
 from utils.splitter import filter_text, JeongguanSplitterText, find_title_idx_in_document
